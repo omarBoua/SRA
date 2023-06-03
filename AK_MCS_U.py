@@ -1,9 +1,15 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
+import matplotlib.pyplot as plt
+
+""" def performance_function(x1,x2):
+    return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
 
 
-def performance_function(x1, x2, k):
+ """
+def performance_function(x1, x2):
+    k = 7
     term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
     term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
@@ -16,7 +22,7 @@ x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
 S = np.column_stack((x1, x2))
 function_calls = 0
-k = 7
+
 
 
 
@@ -28,7 +34,7 @@ selected_indices = np.random.choice(len(S), N1, replace=False)
 DoE = S[selected_indices]
 Pf_values = np.zeros(N1)  # Array to store performance function evaluations
 for i in range(N1):
-    Pf_values[i] = performance_function(DoE[i, 0], DoE[i, 1], k)  # Evaluate performance function
+    Pf_values[i] = performance_function(DoE[i, 0], DoE[i, 1])  # Evaluate performance function
     function_calls += 1
 
 
@@ -60,8 +66,8 @@ while True:
         cov_threshold = 0.05
         if cov_pf < cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
-            print("AK-MCS finished. Probability of failure: ", Pf_hat)
-            print("Coefficient of variation: ", cov_pf)
+            print("AK-MCS finished. Probability of failure: {:.2e}".format(Pf_hat))
+            print("Coefficient of variation: {:.2%}".format(cov_pf))
             print("Number of calls to the performance function", function_calls)
             break
             # Stage 10: End of AK-MCS
@@ -74,10 +80,11 @@ while True:
             # Go back to Stage 4
     else:
         # Stopping condition not met, update design of experiments
-        x_best_performance = performance_function(x_best[0], x_best[1], k)
+        x_best_performance = performance_function(x_best[0], x_best[1])
         function_calls += 1
         Pf_values = np.concatenate((Pf_values, [x_best_performance]))
         DoE = np.vstack((DoE, x_best))
         scaled_DoE = scaler.transform(DoE)
         kriging.fit(scaled_DoE, Pf_values)
         # Go back to Stage 4
+

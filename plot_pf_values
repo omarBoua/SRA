@@ -1,0 +1,68 @@
+
+import scipy.stats as stats
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
+from NN_classifier_class import PerformanceTrainer
+from monte_carlo_simulation import Monte_Carlo
+MCSimulator = Monte_Carlo()
+# Create an instance of the PerformanceTrainer class
+trainer = PerformanceTrainer()
+
+# Call the train_and_get_pf_values() function to train the model and get pf_values
+pf_values_NNC = trainer.train_and_get_pf_values(100)
+
+pf_values_MCS = MCSimulator.simulate_iter(100)
+# Create a boxplot of the pf_values
+fig, ax = plt.subplots()
+
+# Create boxplots for NNC and MCS
+ax.boxplot([pf_values_NNC, pf_values_MCS])
+mean_NNC = np.mean(pf_values_NNC)
+std_NNC = np.std(pf_values_NNC)
+
+mean_MCS = np.mean(pf_values_MCS)
+std_MCS = np.std(pf_values_MCS)
+
+mean = mean_NNC
+u = mean_MCS
+std = std_NNC
+n = 100
+
+# Calculate the t-statistic
+t_statistic = (mean - u) / (std / (n ** 0.5))
+
+# Degrees of freedom
+df = n - 1
+
+# Perform the t-test
+p_value = stats.t.sf(abs(t_statistic), df) * 2
+
+# Print the results
+print("T-Statistic:", t_statistic)
+print("Degrees of Freedom:", df)
+print("P-Value:", p_value)
+alpha = 0.05
+if(p_value < alpha):
+    print("We reject the null hypothesis that there is a significant difference in means of ouputs of the models with 95 percent confidence level")
+else:
+    print("We do not reject the null hypothesis that there is a significant difference in means of ouputs of the models")
+
+
+# Set x-axis tick labels
+ax.set_xticklabels(['NNC', 'MCS'])
+# Add mean and standard deviation text
+ax.text(1, mean_NNC, f"Mean: {mean_NNC:.2f}\nStd: {std_NNC:.2f}", ha='center', va='center')
+ax.text(2, mean_MCS, f"Mean: {mean_MCS:.2f}\nStd: {std_MCS:.2f}", ha='center', va='center')
+
+# Set labels and title
+plt.xlabel('Model')
+plt.ylabel('PF Value')
+plt.title('Boxplot of PF Values')
+plt.show()
+
+# Sample mean, population mean, standard deviation, and sample size
+
