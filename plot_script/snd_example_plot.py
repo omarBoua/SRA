@@ -10,13 +10,16 @@ x1 = np.linspace(-8, 16, 10000)  # Adjust the range as per your requirement
 x2 = np.linspace(-8, 16, 10000)  # Adjust the range as per your requirement
 
 u1 = np.random.normal(4, 2, size= 3000)
-u2 = np.random.normal(-2, 2, size= 3000)
+u2 = np.random.normal(4, 2, size= 3000)
 
 performance_values = performance_function(u1, u2)
 
 
 negative_values_indices = np.where(performance_values < 0)
 positive_values_indices = np.where(performance_values >= 0)
+_, ax = plt.subplots()
+neg_count = np.sum(performance_values <0)
+pos_count = np.sum(performance_values > 0)
 
 # Plot the data points with negative performance function values in red
 plt.scatter(u1[negative_values_indices], u2[negative_values_indices], color='blue', label='Safe region g(u1,u2) < 0', s=2)
@@ -32,6 +35,9 @@ Z = performance_function(X1, X2)
 # Create a contour plot of the performance function
 plt.contour(X1, X2, Z, levels=0,  colors = 'black')
 
+print(pos_count)
+print(neg_count)
+print(neg_count / pos_count)
 # Set plot title and labels
 plt.title('Data points classified into safe and unsafe regions')
 plt.xlabel('u1')

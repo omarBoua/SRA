@@ -1,9 +1,5 @@
 
 import scipy.stats as stats
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 from NN_classifier_class import PerformanceTrainer
@@ -47,16 +43,16 @@ print("Degrees of Freedom:", df)
 print("P-Value:", p_value)
 alpha = 0.05
 if(p_value < alpha):
-    print("We reject the null hypothesis that there is a significant difference in means of ouputs of the models with 95 percent confidence level")
+    print("We reject the null hypothesis")
 else:
-    print("We do not reject the null hypothesis that there is a significant difference in means of ouputs of the models")
+    print("We do not reject the null hypothesis")
 
 
 # Set x-axis tick labels
 ax.set_xticklabels(['NNC', 'MCS'])
 # Add mean and standard deviation text
-ax.text(1, mean_NNC, f"Mean: {mean_NNC:.2f}\nStd: {std_NNC:.2f}", ha='center', va='center')
-ax.text(2, mean_MCS, f"Mean: {mean_MCS:.2f}\nStd: {std_MCS:.2f}", ha='center', va='center')
+ax.text(1, mean_NNC, f"Mean: {mean_NNC:.4f}\nStd: {std_NNC:.4f}", ha='center', va='center')
+ax.text(2, mean_MCS, f"Mean: {mean_MCS:.4f}\nStd: {std_MCS:.4f}", ha='center', va='center')
 
 # Set labels and title
 plt.xlabel('Model')
@@ -64,5 +60,4 @@ plt.ylabel('PF Value')
 plt.title('Boxplot of PF Values')
 plt.show()
 
-# Sample mean, population mean, standard deviation, and sample size
 

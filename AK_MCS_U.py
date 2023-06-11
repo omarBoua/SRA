@@ -38,13 +38,13 @@ for i in range(N1):
     function_calls += 1
 
 
-
 # Stage 3: Computation of Kriging model
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
 kriging = GaussianProcessRegressor()
 kriging.fit(scaled_DoE, Pf_values)
+iter =0
 while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
@@ -87,4 +87,5 @@ while True:
         scaled_DoE = scaler.transform(DoE)
         kriging.fit(scaled_DoE, Pf_values)
         # Go back to Stage 4
-
+    iter += 1
+    print("iter ",iter, ": ",Pf_hat)

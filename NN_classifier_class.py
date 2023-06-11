@@ -12,26 +12,30 @@ class PerformanceNet(nn.Module):
     def __init__(self):
         super(PerformanceNet, self).__init__()
         self.fc1 = nn.Linear(2, 10)
-        self.fc2 = nn.Linear(10, 1)
+        self.fc2 = nn.Linear(10, 10)
+        self.fc3 = nn.Linear(10,1)
+   
 
     def forward(self, x):
-        x = self.fc1(x)
+        x = torch.sigmoid(self.fc1(x))
         x = torch.sigmoid(self.fc2(x))
+        x = torch.sigmoid(self.fc3(x))
+
         return x
 
 
 class PerformanceTrainer:
-    def __init__(self):
+    def __init__(self, N_test = 100000, N1 = 500):
         self.model = PerformanceNet()
         self.criterion = nn.BCELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.01)
         self.pf_values = []
-
+        self.N_test = N_test
+        self.N1 = N1 
     def train_and_get_pf_values(self, num_iterations):
         for i in range(num_iterations):
-            N1 = 500
-            x1_train = np.random.normal(4, 2, size=N1)
-            x2_train = np.random.normal(-2, 2, size=N1)
+            x1_train = np.random.normal(4, 2, size=self.N1)
+            x2_train = np.random.normal(2.5, 2, size=self.N1)
             y_train = np.array(
                 [1 if performance_function(x1, x2) < 0 else 0 for x1, x2 in zip(x1_train, x2_train)]
             )
@@ -47,9 +51,8 @@ class PerformanceTrainer:
                 loss.backward()
                 self.optimizer.step()
 
-            N_test = 100000
-            x1_test = np.random.normal(4, 2, size=N_test) #more samples
-            x2_test = np.random.normal(-2, 2, size=N_test)
+            x1_test = np.random.normal(4, 2, size=self.N_test) #more samples
+            x2_test = np.random.normal(-2, 2, size=self.N_test)
 
             x_test = torch.tensor(np.column_stack((x1_test, x2_test)), dtype=torch.float32)
 
@@ -64,7 +67,7 @@ class PerformanceTrainer:
 
             threshold = 0.5
             y_pred_class = np.where(y_pred > threshold, 1, 0)
-            Pf_hat = np.sum(y_pred_class == 0) / N_test
+            Pf_hat = np.sum(y_pred_class == 0) / self.N_test
 
 
             
