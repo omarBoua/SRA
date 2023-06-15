@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
  """
 def performance_function(x1, x2):
-    k = 7
+    k = 6
     term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
     term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
@@ -29,6 +29,7 @@ function_calls = 0
 
 # Stage 2: Definition of initial design of experiments (DoE)
 N1 = 12
+n_EDini = N1 
 selected_indices = np.random.choice(len(S), N1, replace=False)
 
 DoE = S[selected_indices]
@@ -45,6 +46,8 @@ scaled_DoE = scaler.fit_transform(DoE)
 kriging = GaussianProcessRegressor()
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
+function_calls_values = []
+pf_hat_values = []
 while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
@@ -88,4 +91,64 @@ while True:
         kriging.fit(scaled_DoE, Pf_values)
         # Go back to Stage 4
     iter += 1
+    function_calls_values.append(function_calls)
+    pf_hat_values.append(Pf_hat)
     print("iter ",iter, ": ",Pf_hat)
+
+""" 
+
+x1_vals = np.linspace(-6, 6, 1000)
+x2_vals = np.linspace(-6, 6, 1000)
+X1, X2 = np.meshgrid(x1_vals, x2_vals)
+
+# Calculate LSF values for each combination of x1 and x2
+Z = np.array([performance_function(x1, x2) for x1, x2 in zip(X1.flatten(), X2.flatten())])
+Z = Z.reshape(X1.shape)
+
+# Plotting the contour of LSF
+plt.contour(X1, X2, Z, levels=[0], colors='black')
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.title('LSF Contour')
+
+# Plotting the initial points in the design of experiment
+plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
+
+# Plotting the added points in the final design of experiment
+plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
+
+
+legend_elements = [
+    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
+    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
+    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
+]
+
+
+plt.legend(handles=legend_elements)
+
+plt.show() """
+
+
+# Plotting pf_hat values vs. function_calls
+plt.plot(function_calls_values, pf_hat_values, 'b-')
+plt.xlabel('function_calls')
+plt.ylabel('pf_hat')
+plt.title('Convergence Plot')
+
+
+# Indicate the last point
+last_point_calls = function_calls_values[-1]
+last_point_pf_hat = pf_hat_values[-1]
+plt.plot(last_point_calls, last_point_pf_hat, 'ro')
+plt.annotate(f'({last_point_calls}, {last_point_pf_hat})',
+             xy=(last_point_calls, last_point_pf_hat),
+             xytext=(last_point_calls  , last_point_pf_hat+last_point_pf_hat/10 ),
+             arrowprops=dict(facecolor='black', arrowstyle='->'))
+
+# Display the number of iterations
+plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
+         verticalalignment='top', horizontalalignment='right',
+         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
+plt.show() 

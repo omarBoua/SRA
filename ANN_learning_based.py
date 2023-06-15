@@ -22,6 +22,8 @@ def calculate_u(sample, models):
 
 pf_hat_values = []  # List to store pf_hat values at each iteration
 function_calls_values = []
+pf_max_values = []
+pf_min_values = []
 function_calls = 0
 
 #limit state function with two inputs x1 and x2
@@ -89,9 +91,10 @@ scaled_DoE = scaler.fit_transform(DoE)
 
  
 #3. train the B neural network
-B = 40  #number of neural networks
+B = 48  #number of neural networks
 iter = 0 
-hidden_layers = np.repeat([2, 3, 4, 5], 10)
+hidden_layers = np.repeat([2, 3, 4, 5], 12)
+
 while(1):
     losses = []
     models = [] 
@@ -118,16 +121,19 @@ while(1):
     pf_hat = np.mean(pf_values)
     pf_max = np.max(pf_values)
     pf_min = np.min(pf_values)
-    relative_change = (pf_max - pf_min) / pf_hat
     print("iter ", iter, ":", pf_hat)
-    print(relative_change)
     pf_hat_values.append(pf_hat)
+    pf_max_values.append(pf_max)
+    pf_min_values.append(pf_min)
     function_calls_values.append(function_calls)
-    if(relative_change <= eps_pf):
+
+    cov_pf = (pf_max - pf_min)/pf_hat
+    print(cov_pf)
+
+
+    if(cov_pf <= eps_pf):
         break
     
-    if(iter == 30):
-        break
     
 
     best_points = []
@@ -179,7 +185,7 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
 
 plt.show() """
 
-
+""" 
 #uncomment for plotting design of experiment
 
 x1_vals = np.linspace(-6, 6, 1000)
@@ -202,5 +208,46 @@ plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker 
 # Plotting the added points in the final design of experiment
 plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
 
+
+legend_elements = [
+    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
+    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
+    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
+]
+
+
+plt.legend(handles=legend_elements)
+
+plt.show() """
+
+#uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
+
+# Plotting pf_hat, pf_max, and pf_min values vs. function_calls
+plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
+plt.plot(function_calls_values, pf_max_values, 'r--', label='pf_max')
+plt.plot(function_calls_values, pf_min_values, 'r--', label='pf_min')
+
+# Plotting pf_mcs as a fixed value
+pf_mcs = 0.004447
+plt.axhline(y=pf_mcs, color='purple', linestyle=':', label='pf_mcs')
+
+plt.xlabel('function_calls')
+plt.ylabel('pf')
+plt.title('Convergence Plot')
 plt.legend()
+
+# Indicate the last point
+last_point_calls = function_calls_values[-1]
+last_point_pf_hat = pf_hat_values[-1]
+plt.plot(last_point_calls, last_point_pf_hat, 'ro')
+plt.annotate(f'({last_point_calls}, {last_point_pf_hat})',
+             xy=(last_point_calls, last_point_pf_hat),
+             xytext=(last_point_calls + 2, last_point_pf_hat + last_point_pf_hat/10),
+             arrowprops=dict(facecolor='black', arrowstyle='->'))
+
+# Display the number of iterations
+plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
+         verticalalignment='top', horizontalalignment='right',
+         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
 plt.show()
