@@ -37,7 +37,7 @@ def LSF(x1, x2):
     function_calls += 1
     return min(term1, term2, term3, term4)
 #1. generate nMC 
-nMC = 5000
+nMC = 10000
 x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
 S = np.column_stack((x1, x2))
@@ -91,10 +91,10 @@ scaled_DoE = scaler.fit_transform(DoE)
 
  
 #3. train the B neural network
-B = 48  #number of neural networks
+B = 50  #number of neural networks
 iter = 0 
-hidden_layers = np.repeat([2, 3, 4, 5], 12)
-
+hidden_layers = np.repeat([5], B)
+ 
 while(1):
     losses = []
     models = [] 
@@ -116,7 +116,7 @@ while(1):
 
     worst_model_index = np.argmax(losses)
     best_model_index = np.argmin(losses)
-    eps_pf = 0.5
+    eps_pf = 0.05
 
     pf_hat = np.mean(pf_values)
     pf_max = np.max(pf_values)
@@ -126,15 +126,18 @@ while(1):
     pf_max_values.append(pf_max)
     pf_min_values.append(pf_min)
     function_calls_values.append(function_calls)
+    se = np.sqrt(pf_hat * (1-pf_hat)/B)
+    print(se)
+    cov_pf = (pf_max - pf_min) / pf_hat
+    #cov_pf = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
 
-    cov_pf = (pf_max - pf_min)/pf_hat
     print(cov_pf)
 
 
     if(cov_pf <= eps_pf):
         break
     
-    
+    print(len(pf_values))
 
     best_points = []
     for cluster_id in range(n_add):
@@ -150,6 +153,8 @@ while(1):
     for i in range(n_add):
         labels_best_points[i] = LSF(best_points[i][0], best_points[i][1])
         labels_best_points[i] = np.tanh(labels_best_points[i])
+
+
     labels = np.append(labels, labels_best_points)
     DoE = np.vstack((DoE, best_points))
     scaled_DoE = scaler.transform(DoE)
@@ -161,7 +166,7 @@ while(1):
    
     print(function_calls)
    
-    iter += 1 
+    iter += 1  
 #uncomment for plotting probabilities against number of lsf calls
 """ # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'bo-')
@@ -220,7 +225,7 @@ plt.legend(handles=legend_elements)
 
 plt.show() """
 
-#uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
+""" #uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
 
 # Plotting pf_hat, pf_max, and pf_min values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
@@ -251,3 +256,13 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
 plt.show()
+ """
+
+#uncomment for clustering plot
+"""  # Create a scatter plot of the data points with colors based on their cluster labels
+plt.scatter(S[:, 0], S[:, 1], c=cluster_labels)
+plt.title("K-means Clustering")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.show()
+ """
