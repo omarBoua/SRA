@@ -6,6 +6,8 @@ import warnings
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
+np.random.seed(29)
+
 warnings.filterwarnings("ignore")
 def calculate_u(sample, models):
     bf = 0
@@ -24,6 +26,7 @@ pf_hat_values = []  # List to store pf_hat values at each iteration
 function_calls_values = []
 pf_max_values = []
 pf_min_values = []
+cov_pf_values = []
 function_calls = 0
 
 #limit state function with two inputs x1 and x2
@@ -37,7 +40,7 @@ def LSF(x1, x2):
     function_calls += 1
     return min(term1, term2, term3, term4)
 #1. generate nMC 
-nMC = 10000
+nMC = 5000
 x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
 S = np.column_stack((x1, x2))
@@ -91,20 +94,19 @@ scaled_DoE = scaler.fit_transform(DoE)
 
  
 #3. train the B neural network
-B = 50  #number of neural networks
+B = 48  #number of neural networks
 iter = 0 
-hidden_layers = np.repeat([5], B)
- 
+hidden_layers = np.repeat([2,3,4,5], 12)
+last_five_iter_scores = np.zeros(5)
 while(1):
     losses = []
     models = [] 
 
     for j in hidden_layers:
-        hidden_layer_sizes = (j,)
+        hidden_layer_sizes = (j,j)
         model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
         model.fit(scaled_DoE,labels)
         models.append(model)
-    
     pf_values = []
     
     for model in models:
@@ -113,9 +115,9 @@ while(1):
         pf = np.sum(y_ann <= 0) / nMC
         pf_values.append(pf)
         losses.append(model.loss_)
+        
 
     worst_model_index = np.argmax(losses)
-    best_model_index = np.argmin(losses)
     eps_pf = 0.05
 
     pf_hat = np.mean(pf_values)
@@ -126,18 +128,22 @@ while(1):
     pf_max_values.append(pf_max)
     pf_min_values.append(pf_min)
     function_calls_values.append(function_calls)
-    se = np.sqrt(pf_hat * (1-pf_hat)/B)
-    print(se)
-    cov_pf = (pf_max - pf_min) / pf_hat
+    
+   
+    cov_pf_iter = (pf_max - pf_min) / pf_hat
+    last_five_iter_scores[iter % 5] = cov_pf_iter
+
+    if(iter % 5 == 0 and iter > 0 ):
+        cov_pf = np.mean(last_five_iter_scores)
+        cov_pf_values.append(cov_pf)
+        if(cov_pf <= eps_pf):
+            break
     #cov_pf = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
 
-    print(cov_pf)
 
 
-    if(cov_pf <= eps_pf):
-        break
     
-    print(len(pf_values))
+    
 
     best_points = []
     for cluster_id in range(n_add):
@@ -163,10 +169,21 @@ while(1):
 
     if(hidden_layers[worst_model_index] < 5):
         hidden_layers[worst_model_index] += 1 
+        
+    else:
+        for i in range(len(hidden_layers)):
+            if(hidden_layers[i]<5):
+               
+                hidden_layers[i] +=1
+                break
    
-    print(function_calls)
+    #print(function_calls)
    
     iter += 1  
+   
+
+
+
 #uncomment for plotting probabilities against number of lsf calls
 """ # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'bo-')
@@ -225,8 +242,31 @@ plt.legend(handles=legend_elements)
 
 plt.show() """
 
-""" #uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
 
+# uncomment to plot cov_pf_values
+""" multiples_of_5 = [i for i in range(5, iter + 1, 5)]
+
+plt.plot(multiples_of_5, cov_pf_values, 'ro-', label='Ratio of Convergence')
+
+
+# Plotting pf_mcs as a fixed value
+
+plt.xlabel('Iterations')
+plt.ylabel('RoC')
+plt.title('Convergence Plot')
+plt.legend()
+plt.xticks(multiples_of_5)
+# Indicate the last point
+
+
+# Display the number of iterations
+plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
+         verticalalignment='top', horizontalalignment='left',
+         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
+plt.show() """
+#uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
+""" 
 # Plotting pf_hat, pf_max, and pf_min values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
 plt.plot(function_calls_values, pf_max_values, 'r--', label='pf_max')
@@ -236,7 +276,7 @@ plt.plot(function_calls_values, pf_min_values, 'r--', label='pf_min')
 pf_mcs = 0.004447
 plt.axhline(y=pf_mcs, color='purple', linestyle=':', label='pf_mcs')
 
-plt.xlabel('function_calls')
+plt.xlabel('Function Calls')
 plt.ylabel('pf')
 plt.title('Convergence Plot')
 plt.legend()
@@ -245,14 +285,15 @@ plt.legend()
 last_point_calls = function_calls_values[-1]
 last_point_pf_hat = pf_hat_values[-1]
 plt.plot(last_point_calls, last_point_pf_hat, 'ro')
-plt.annotate(f'({last_point_calls}, {last_point_pf_hat})',
+plt.annotate(f'({last_point_calls}, {last_point_pf_hat:.4e})',
              xy=(last_point_calls, last_point_pf_hat),
-             xytext=(last_point_calls + 2, last_point_pf_hat + last_point_pf_hat/10),
+             xytext=(last_point_calls , last_point_pf_hat + last_point_pf_hat ),
              arrowprops=dict(facecolor='black', arrowstyle='->'))
 
+
 # Display the number of iterations
-plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
-         verticalalignment='top', horizontalalignment='right',
+plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
+         verticalalignment='top', horizontalalignment='left',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
 plt.show()

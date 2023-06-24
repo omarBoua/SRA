@@ -12,11 +12,11 @@ def LSF(x1, x2):
     return min(term1, term2, term3, term4)
 pf_values = []
 
-np.random.seed(17)
+np.random.seed(29)
 
 for i in range(1):
     # Stage 1: Generation of Monte Carlo population
-    nMC = 500
+    nMC = 150
     x1 = np.random.normal(0, 1, size=nMC)
     x2 = np.random.normal(0, 1, size=nMC)
     S = np.column_stack((x1, x2))
@@ -34,7 +34,7 @@ for i in range(1):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(10,10,10,10,10), activation='tanh',solver = 'lbfgs',  max_iter = 10000)
+    mlp = MLPRegressor(hidden_layer_sizes=(5,5), activation='tanh',solver = 'lbfgs',  max_iter = 10000)
     mlp.fit(S, labels)
 
     test_size =100000
