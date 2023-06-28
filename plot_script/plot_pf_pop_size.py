@@ -2,7 +2,7 @@
 import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
-from NN_classifier_class import PerformanceTrainer
+from plot_script.NN_classifier_class import PerformanceTrainer
 # Create an instance of the PerformanceTrainer class
 train_set_sizes = [10,50,  75, 100, 500, 1000, 10000 ]
 # Call the train_and_get_pf_values() function to train the model and get pf_values

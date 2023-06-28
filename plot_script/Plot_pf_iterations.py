@@ -2,7 +2,7 @@
 import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
-from NN_classifier_class import PerformanceTrainer
+from plot_script.NN_classifier_class import PerformanceTrainer
 # Create an instance of the PerformanceTrainer class
 trainer = PerformanceTrainer()
 
