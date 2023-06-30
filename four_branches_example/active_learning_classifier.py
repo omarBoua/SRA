@@ -1,8 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
-
-from data_generator import DataGenerator
+import matplotlib.pyplot as plt
 
 def performance_function( x1, x2):
         k = 6
@@ -13,13 +12,13 @@ def performance_function( x1, x2):
         
         return min(term1, term2, term3, term4)
 pf_values = []
-for i in range(10):
+np.random.seed(72)
+for i in range(1):
     # Stage 1: Generation of Monte Carlo population
-    nMC =10000
-
-    data_gen= DataGenerator()
-    S = data_gen.generate_data(nMC)
-    S = np.array(S)
+    nMC = 500
+    x1 = np.random.normal(4, 1, size=nMC)
+    x2 = np.random.normal(0, 1, size=nMC)
+    S = np.column_stack((x1, x2))
     function_calls = 0
 
 
@@ -33,7 +32,8 @@ for i in range(10):
 
     print(np.sum(classes <= 0))
     # Stage 3: Computation of MLP model
-    mlp = MLPClassifier(hidden_layer_sizes=(100,100), activation= 'logistic', solver = 'adam',learning_rate = 'constant',max_iter= 100000, learning_rate_init= 0.01)  # Customize the hidden layer sizes as needed
+
+    mlp = MLPClassifier(hidden_layer_sizes=(10,10,10), activation= 'logistic', solver = 'adam',learning_rate = 'constant',max_iter= 10000, learning_rate_init= 0.01)  # Customize the hidden layer sizes as needed
     mlp.fit(S, classes)
 
 
@@ -44,14 +44,13 @@ for i in range(10):
 
 
     # Stage 4: prediction
-    S_test = np.column_stack((test_u1, test_u2))
-    #S_test = scaler.fit_transform(S_test)
-    
-    classes_hat = mlp.predict(S_test)
-    print(classes_hat)
-    
+    S = np.column_stack((test_u1, test_u2))
 
-    Pf_hat = np.sum(classes_hat == 0) / test_size
+    classes_hat = mlp.predict(S)
+
+    y_pred_class = np.where(classes_hat > 0.5, 1, 0)
+
+    Pf_hat = np.sum(y_pred_class == 0) / test_size
     pf_values.append(Pf_hat)
     print(Pf_hat)
 print(np.mean(pf_values))

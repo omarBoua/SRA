@@ -31,12 +31,12 @@ function_calls = 0
 # Stage 2: Definition of initial design of experiments (DoE)
 N1 = 12
 #uncomment for random selection
-""" n_EDini = N1 
+n_EDini = N1 
 selected_indices = np.random.choice(len(S), N1, replace=False)
 
-DoE = S[selected_indices] """
+DoE = S[selected_indices]
 
-#uncomment for importance sampling
+""" #uncomment for importance sampling
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
 closest_sample_index = np.argmin(distances_to_mean)
@@ -48,8 +48,7 @@ for _ in range(N1 - 1):
     initial_design.append(S[farthest_sample_index])
 
 DoE = np.array(initial_design)
-
-
+"""
 Pf_values = np.zeros(N1)  # Array to store performance function evaluations
 for i in range(N1):
     Pf_values[i] = performance_function(DoE[i, 0], DoE[i, 1])  # Evaluate performance function
@@ -86,8 +85,8 @@ while True:
         cov_threshold = 0.05
         if cov_pf < cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
-            print("AK-MCS finished. Probability of failure: {:.2e}".format(Pf_hat))
-            print("Coefficient of variation: {:.2%}".format(cov_pf))
+            print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
+            print("Coefficient of variation: {:.4%}".format(cov_pf))
             print("Number of calls to the performance function", function_calls)
             break
             # Stage 10: End of AK-MCS
@@ -146,7 +145,7 @@ plt.legend(handles=legend_elements)
 
 plt.show() """
 
-
+""" 
 # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'b-')
 plt.xlabel('function_calls')
@@ -168,4 +167,4 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
-plt.show() 
+plt.show()  """

@@ -6,6 +6,10 @@ import warnings
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import math
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import cross_val_score
+
 np.random.seed(29)
 
 warnings.filterwarnings("ignore")
@@ -69,7 +73,7 @@ cluster_labels = kmeans.labels_
 n_EDini = 50
 n_epochs = n_EDini
 # Step 1: Find the sample closest to the mean
-mean_population = np.mean(S, axis=0)
+""" mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
 closest_sample_index = np.argmin(distances_to_mean)
 initial_design = [S[closest_sample_index]]
@@ -84,8 +88,13 @@ for _ in range(n_EDini - 1):
     initial_design.append(S[farthest_sample_index])
 
 labels = np.zeros(n_EDini) 
-initial_design = np.array(initial_design)
+initial_design = np.array(initial_design) """
 
+selected_indices = np.random.choice(len(S), n_EDini, replace=False)
+
+initial_design = S[selected_indices]
+labels = np.zeros(n_EDini) 
+initial_design = np.array(initial_design) 
 
 for i in range(n_EDini):
     labels[i] = LSF(initial_design[i, 0], 
@@ -107,15 +116,21 @@ hidden_layers = np.append(np.repeat([2,3,4,5], 12),[5,5])
 
 last_five_iter_scores = np.zeros(5)
 while(1):
-    losses = []
+    validation_errors = []
     models = [] 
     print(hidden_layers)
     for j in hidden_layers:
         hidden_layer_sizes = (j,j)
         model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
-        model.fit(scaled_DoE,labels)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels,
+                                                            random_state=1)
+        model.fit(X_train,y_train)
+        y_test_pred = model.predict(X_test)
+        validation_errors.append(mean_squared_error(y_test, y_test_pred ))
+
+        #scores = cross_val_score(model, scaled_DoE, y, cv=5, scoring='neg_mean_squared_error')
+
         models.append(model)
-        
     pf_values = []
     
     for model in models:
@@ -123,10 +138,10 @@ while(1):
         y_ann = model.predict(scaled_S)
         pf = np.sum(y_ann <= 0) / nMC
         pf_values.append(pf)
-        losses.append(model.loss_)
+
         
 
-    worst_model_index = np.argmax(losses)
+    worst_model_index = np.argmax(validation_errors)
     eps_pf = 0.05
 
     pf_hat = np.mean(pf_values)
@@ -141,12 +156,13 @@ while(1):
    
     cov_pf_iter = (pf_max - pf_min) / pf_hat
     last_five_iter_scores[iter % 5] = cov_pf_iter
-
-    if(iter % 5 == 0 and iter > 0 ):
+    if(cov_pf_iter <= eps_pf):
+            break
+    """ if(iter % 5 == 0 and iter > 0 ):
         cov_pf = np.mean(last_five_iter_scores)
         cov_pf_values.append(cov_pf)
         if(cov_pf <= eps_pf):
-            break
+            break """
     #cov_pf = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
 
 
@@ -177,23 +193,18 @@ while(1):
     n_ED = len(DoE)
     n_epochs =  n_epochs_add * (n_ED - n_EDini) + n_EDini
 
-    """  if(hidden_layers[worst_model_index] < 5):
-        hidden_layers[worst_model_index] += 1 
-        
-    else:
-        for i in range(len(hidden_layers)):
-            if(hidden_layers[i]<5):
-               
-                hidden_layers[i] +=1
-                break """
+
     alpha = 1.5
-    num_layers_to_update = min(math.ceil(np.min(losses) + alpha * np.std(losses)), B//2)
-    num_layers_to_update = 3
+    perf_limit = np.min(validation_errors) + alpha * np.std(validation_errors)
+    num_layers_to_update = len(np.where(validation_errors > perf_limit)[0])
+    num_layers_to_update = min(num_layers_to_update , B//2)
+    num_layers_to_update = max(1,num_layers_to_update)
     print(num_layers_to_update)
+
     updated_hidden_layers = hidden_layers.copy()
 
     # Find the indices of the worst neural networks
-    worst_model_indices = np.argsort(losses)[-num_layers_to_update:]
+    worst_model_indices = np.argsort(validation_errors)[-num_layers_to_update:]
 
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
@@ -215,7 +226,7 @@ while(1):
 
 #uncomment for plotting probabilities against number of lsf calls
  # Plotting pf_hat values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'b-')
+""" plt.plot(function_calls_values, pf_hat_values, 'b-')
 plt.xlabel('function_calls')
 plt.ylabel('pf_hat')
 plt.title('Convergence Plot')
@@ -235,7 +246,7 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
 plt.show() 
-
+ """
 """ 
 #uncomment for plotting design of experiment
 
@@ -295,7 +306,7 @@ plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
 
 plt.show() """
 #uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
-""" 
+""" """ 
 # Plotting pf_hat, pf_max, and pf_min values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
 plt.plot(function_calls_values, pf_max_values, 'r--', label='pf_max')
@@ -326,8 +337,8 @@ plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
 plt.show()
- """
-
+ 
+ 
 #uncomment for clustering plot
 """  # Create a scatter plot of the data points with colors based on their cluster labels
 plt.scatter(S[:, 0], S[:, 1], c=cluster_labels)
