@@ -1,50 +1,45 @@
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
+from sklearn.preprocessing import StandardScaler
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 import warnings
 warnings.filterwarnings("ignore")
 
-""" def performance_function(x1,x2):
-    return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
+def g(X):
+    global function_calls
+    n = len(X)
+    sigma = np.std(X)
+    function_calls += 1
+    return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
-
- """
-def performance_function(x1, x2):
-    k = 6
-    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
-    term3 = (x1 - x2) + k / (2**0.5)
-    term4 = (x2 - x1) + k / (2**0.5)
-    
-    return min(term1, term2, term3, term4)
-# Stage 1: Generation of Monte Carlo population
-nMC = 1000000
-x1 = np.random.normal(0,1,size = nMC)
-x2 = np.random.normal(0,1,size = nMC )
-S = np.column_stack((x1, x2))
 function_calls = 0
+nMC = 300000 # Number of instances to generate
+n = 40  # Number of parameters
+
+mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
+
+sigma_lognormal = np.sqrt(np.log(1 + 0.2**2))
+
+S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n))
+
+
 
 
 
 
 
 # Stage 2: Definition of initial design of experiments (DoE)
-N1 = 12
-#uncomment for random selection
-""" n_EDini = N1 
-selected_indices = np.random.choice(len(S), N1, replace=False)
+N1 = 50
+n_EDini = N1 
 
-DoE = S[selected_indices] """
-
-#uncomment for importance sampling
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
 closest_sample_index = np.argmin(distances_to_mean)
 initial_design = [S[closest_sample_index]]
 
-for _ in range(N1 - 1):
+for _ in range(n_EDini - 1):
     distances_to_design = cdist(initial_design, S)
     farthest_sample_index = np.argmax(np.min(distances_to_design, axis=0))
     initial_design.append(S[farthest_sample_index])
@@ -52,9 +47,14 @@ for _ in range(N1 - 1):
 DoE = np.array(initial_design)
 
 
+""" selected_indices = np.random.choice(len(S), N1, replace=False)
+DoE = S[selected_indices]
+ """
+
+
 Pf_values = np.zeros(N1)  # Array to store performance function evaluations
 for i in range(N1):
-    Pf_values[i] = performance_function(DoE[i, 0], DoE[i, 1])  # Evaluate performance function
+    Pf_values[i] = g(DoE[i])  # Evaluate performance function
     function_calls += 1
 
 
@@ -62,7 +62,9 @@ for i in range(N1):
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
-kriging = GaussianProcessRegressor()
+kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-3, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
+kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
+
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
 function_calls_values = []
@@ -71,47 +73,47 @@ while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
     G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
-    Pf_hat = np.sum(G_hat < 0) / nMC
+    Pf_hat = np.sum(G_hat <= 0) / nMC
     
     # Stage 5: Identification of the best next point to evaluate
     learning_values = np.abs(G_hat) / kriging_std
     x_best_index = np.argmin(learning_values)
     x_best = S[x_best_index]
     # Stage 6: Stopping condition on learning
-    stopping_condition = min(learning_values) >= 2   
-    cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-    print(cov_pf)
-    if(cov_pf <= 0.01):
-        print("early")
-        break
+    stopping_condition = min(learning_values) >= 2 
+    print("std ", kriging_std[x_best_index]
+           ) 
+    print("G_hat", G_hat[x_best_index])
+    print(min(learning_values))
+
+
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
         # Stopping condition met, learning is stopped
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-        
+        print("cov", cov_pf)
         cov_threshold = 0.05
         if cov_pf < cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
-            print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
-            print("Coefficient of variation: {:.4%}".format(cov_pf))
+            print("AK-MCS finished. Probability of failure: {:.2e}".format(Pf_hat))
+            print("Coefficient of variation: {:.2%}".format(cov_pf))
             print("Number of calls to the performance function", function_calls)
             break
             # Stage 10: End of AK-MCS
         else:
             # Coefficient of variation is too high, update population
-            new_x = np.random.normal(0,1, nMC)
-            new_y = np.random.normal(0,1,nMC)
-            new_points = np.column_stack((new_x, new_y)) 
+          
+            new_points = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n)) 
             S = np.vstack((S, new_points))
             # Go back to Stage 4
     else:
         # Stopping condition not met, update design of experiments
-        x_best_performance = performance_function(x_best[0], x_best[1])
+        x_best_performance = g(x_best)
         function_calls += 1
         Pf_values = np.concatenate((Pf_values, [x_best_performance]))
         DoE = np.vstack((DoE, x_best))
         scaled_DoE = scaler.transform(DoE)
-        kriging.fit(scaled_DoE, Pf_values)
+        kriging.fit(scaled_DoE, Pf_values)        
         # Go back to Stage 4
     iter += 1
     function_calls_values.append(function_calls)

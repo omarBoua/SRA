@@ -5,7 +5,7 @@ def g(c1, c2, m, r, t1, F1):
 
 nMC = 700000
 pf_values = []
-for i in range(1):
+for i in range(30):
     m = np.random.normal(1, 0.05, size=nMC)
     c1 = np.random.normal(1, 0.1, size=nMC)
     c2 = np.random.normal(0.1, 0.01, size=nMC)
@@ -24,3 +24,4 @@ for i in range(1):
     pf_values.append(Pf)
 
 print(np.mean(pf_values))
+print(np.std(pf_values))

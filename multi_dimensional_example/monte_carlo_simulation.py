@@ -10,21 +10,26 @@ def g(X):
 #np.random.seed(4)
 
 pf_values = []
-for i in range(1):
+for i in range(5):
     function_calls = 0
     nMC = 300000 # Number of instances to generate
-    n = 100  # Number of parameters
-
+    n = 40  # Number of parameters
+    n = 100
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
     sigma_lognormal = np.sqrt(np.log(1 + 0.2**2))
+    population = np.random.lognormal(mean=mu_lognormal, sigma=sigma_lognormal, size=(nMC, n))
 
-    S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n))
-        
-    failure_count = 0 
+    """     S = []
+        for _ in range(nMC):
+            data_point = tuple(np.random.lognormal(mean= mu_lognormal, sigma= sigma_lognormal, size=n))
+            print(len(data_point))
+            S.append(data_point)
+    """
 
+    failure_count = 0
     for i in range(nMC):
-        if(g(S[i]) < 0):
+        if(g(population[i]) <= 0):
             failure_count += 1
 
 

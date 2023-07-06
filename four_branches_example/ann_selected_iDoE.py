@@ -10,10 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 
-np.random.seed(29)
+#np.random.seed(29)
 
 warnings.filterwarnings("ignore")
-def calculate_u(sample, models):
+""" def calculate_u(sample, models):
     bf = 0
     bs = 0 
     B = len(models)
@@ -24,7 +24,20 @@ def calculate_u(sample, models):
             bf += 1
         else: 
             bs += 1 
-    return np.abs(bf - bs) / B  
+    return np.abs(bf - bs) / B """  
+def calculate_u_vectorized(samples, models):
+    B = len(models)
+    predictions = np.zeros((B, samples.shape[0]))
+    for i, model in enumerate(models):
+        predictions[i] = model.predict(scaler.transform(samples))
+    bf = np.sum(predictions <= 0, axis=0)
+    bs = np.sum(predictions > 0, axis=0)
+    return np.abs(bf - bs) / B
+
+
+
+
+
 
 pf_hat_values = []  # List to store pf_hat values at each iteration
 function_calls_values = []
@@ -46,7 +59,7 @@ def LSF(x1, x2):
 
 
 #1. generate nMC 
-nMC = 5000
+nMC = 1000000
 
 x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
@@ -90,6 +103,10 @@ for _ in range(n_EDini - 1):
 labels = np.zeros(n_EDini) 
 initial_design = np.array(initial_design)
 
+""" selected_indices = np.random.choice(len(S), N1, replace=False)
+
+DoE = S[selected_indices] """
+
 
 for i in range(n_EDini):
     labels[i] = LSF(initial_design[i, 0], 
@@ -110,33 +127,38 @@ iter = 0
 hidden_layers = np.append(np.repeat([2,3,4,5], 12),[5,5])
 
 last_five_iter_scores = np.zeros(5)
+models = [] 
+for j in hidden_layers:
+    hidden_layer_sizes = (j,j)
+    model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
+    models.append(model)
+    
 while(1):
     validation_errors = []
-    models = [] 
-    print(hidden_layers)
-    for j in hidden_layers:
-        hidden_layer_sizes = (j,j)
-        model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
-        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels,
-                                                            random_state=1)
+    pf_values = []
+    
+    for model in models:
+
+        params = model.get_params()
+        index_model = models.index(model)
+
+        new_hidden_layer_size = hidden_layers[index_model]
+
+        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size)
+
+        model.set_params(**params)
+        model.set_params(max_iter = n_epochs)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels)
         model.fit(X_train,y_train)
         y_test_pred = model.predict(X_test)
         validation_errors.append(mean_squared_error(y_test, y_test_pred ))
 
-        #scores = cross_val_score(model, scaled_DoE, y, cv=5, scoring='neg_mean_squared_error')
-
-        models.append(model)
-    pf_values = []
-    
-    for model in models:
         scaled_S = scaler.fit_transform(S)
         y_ann = model.predict(scaled_S)
         pf = np.sum(y_ann <= 0) / nMC
         pf_values.append(pf)
 
-        
 
-    worst_model_index = np.argmax(validation_errors)
     eps_pf = 0.05
 
     pf_hat = np.mean(pf_values)
@@ -149,38 +171,38 @@ while(1):
     function_calls_values.append(function_calls)
     
    
-    cov_pf_iter = (pf_max - pf_min) / pf_hat
-    last_five_iter_scores[iter % 5] = cov_pf_iter
-    if(cov_pf_iter <= eps_pf):
+    cov_pf_iter = np.std(pf_values) / pf_hat
+    cov_mcs = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
+    print("cov", cov_pf_iter)
+    print("diff", pf_max - pf_min - np.std(pf_values))
+    print("maxmin: ", (pf_max - pf_min) / pf_hat)
+    if((pf_max - pf_min) / pf_hat < 0.05):
+        break
+    if(cov_pf_iter <= 0.05 and cov_mcs < 0.05 ):
+            print("cov_mcs: ", cov_mcs)
+            
             break
-    """ if(iter % 5 == 0 and iter > 0 ):
-        cov_pf = np.mean(last_five_iter_scores)
-        cov_pf_values.append(cov_pf)
-        if(cov_pf <= eps_pf):
-            break """
-    #cov_pf = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
-
-
-
     
+
+
+
     
 
     best_points = []
     for cluster_id in range(n_add):
         cluster_indices = np.where(cluster_labels == cluster_id)[0]
         cluster_samples = S[cluster_indices]
-        ufbr_values = np.array([calculate_u(sample, models ) for sample in cluster_samples])
+        ufbr_values = calculate_u_vectorized(cluster_samples, models)
         best_index = np.argmin(ufbr_values)
         best_point = cluster_samples[best_index]
         best_points.append(best_point)
     best_points = np.array(best_points)
     labels_best_points = np.zeros(n_add)
-
     for i in range(n_add):
         labels_best_points[i] = LSF(best_points[i][0]
                                   , best_points[i][1])
         labels_best_points[i] = np.tanh(labels_best_points[i])
-
+    
 
     labels = np.append(labels, labels_best_points)
     DoE = np.vstack((DoE, best_points))
@@ -200,18 +222,21 @@ while(1):
 
     # Find the indices of the worst neural networks
     worst_model_indices = np.argsort(validation_errors)[-num_layers_to_update:]
-
+    best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
+    print("worstindeices: ", worst_model_indices)
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
         if updated_hidden_layers[index] < 5:
             updated_hidden_layers[index] += 1
         else:
-            for i in range(len(updated_hidden_layers)):
-                if updated_hidden_layers[i] < 5:
-                    updated_hidden_layers[i] += 1
-                    break
+
+            k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
+            print("k", k)
+            replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
+            models[index] = models[replacement_model_index] 
 
     hidden_layers = updated_hidden_layers
+    print(hidden_layers)
     #print(function_calls)
     
     iter += 1  

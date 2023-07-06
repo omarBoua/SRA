@@ -6,20 +6,19 @@ import warnings
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import math
-
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 warnings.filterwarnings("ignore")
-def calculate_u(sample, models):
-    bf = 0
-    bs = 0 
+def calculate_u_vectorized(samples, models):
     B = len(models)
-    for model in models:
-        
-        y_ann = model.predict(scaler.transform([sample]))
-        if y_ann <= 0:
-            bf += 1
-        else: 
-            bs += 1 
-    return np.abs(bf - bs) / B  
+    predictions = np.zeros((B, samples.shape[0]))
+    for i, model in enumerate(models):
+        predictions[i] = model.predict(scaler.transform(samples))
+    bf = np.sum(predictions <= 0, axis=0)
+    bs = np.sum(predictions > 0, axis=0)
+    return np.abs(bf - bs) / B
+
+
 
 pf_hat_values = []  # List to store pf_hat values at each iteration
 function_calls_values = []
@@ -35,12 +34,12 @@ def g(X):
     n = len(X)
     sigma = np.std(X)
     function_calls += 1
-    return n + 3 * sigma * np.sqrt(n) - np.sum(X)
+    return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 
 #1. generate nMC 
-nMC = 5000 # Number of instances to generate
-n = 100  # Number of parameters
+nMC = 300000 # Number of instances to generate
+n = 40  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -100,31 +99,41 @@ scaled_DoE = scaler.fit_transform(DoE)
 #3. train the B neural network
 B = 50  #number of neural networks
 iter = 0 
-hidden_layers = np.repeat([50,60,70,80,100],10 )
+hidden_layers = np.append(np.repeat([2,3,4,5,6,7,8,9,10], 5),[10,10,10,10,10])
 
-last_five_iter_scores = np.zeros(5)
-while(1):
-    losses = []
-    models = [] 
-    print(hidden_layers)
-    for j in hidden_layers:
-        hidden_layer_sizes = (j,j)
-        model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
-        model.fit(scaled_DoE,labels)
-        models.append(model)
-        
-    pf_values = []
+models = [] 
+for j in hidden_layers:
+    hidden_layer_sizes = (j,j,j,j)
+    model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
+    models.append(model)
     
+while(1):
+    
+    pf_values = []
+    validation_errors = []
+
     for model in models:
+        params = model.get_params()
+        index_model = models.index(model)
+
+        new_hidden_layer_size = hidden_layers[index_model]
+
+        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size)
+
+        model.set_params(**params)
+        model.set_params(max_iter = n_epochs)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels)
+        model.fit(X_train,y_train)
+        y_test_pred = model.predict(X_test)
+        validation_errors.append(mean_squared_error(y_test, y_test_pred ))
+
         scaled_S = scaler.fit_transform(S)
         y_ann = model.predict(scaled_S)
         pf = np.sum(y_ann <= 0) / nMC
         pf_values.append(pf)
-        losses.append(model.loss_)
         
 
-    worst_model_index = np.argmax(losses)
-    eps_pf = 0.1
+    eps_pf = 0.05
 
     pf_hat = np.mean(pf_values)
     pf_max = np.max(pf_values)
@@ -136,16 +145,12 @@ while(1):
     function_calls_values.append(function_calls)
     
    
-    cov_pf_iter = (pf_max - pf_min) / pf_hat
-    print("cov: ", cov_pf_iter)
-    last_five_iter_scores[iter % 5] = cov_pf_iter
-
-    if(iter % 5 == 0 and iter > 0 ):
-        cov_pf = np.mean(last_five_iter_scores)
-        cov_pf_values.append(cov_pf)
-        if(cov_pf <= eps_pf):
-            break
-    #cov_pf = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
+    cov_pf = np.std(pf_values)/ pf_hat
+    print("cov: ", cov_pf)
+    if(cov_pf <= eps_pf):
+        break
+  
+        
 
 
 
@@ -156,7 +161,7 @@ while(1):
     for cluster_id in range(n_add):
         cluster_indices = np.where(cluster_labels == cluster_id)[0]
         cluster_samples = S[cluster_indices]
-        ufbr_values = np.array([calculate_u(sample, models ) for sample in cluster_samples])
+        ufbr_values = calculate_u_vectorized(cluster_samples, models ) 
         best_index = np.argmin(ufbr_values)
         best_point = cluster_samples[best_index]
         best_points.append(best_point)
@@ -174,40 +179,36 @@ while(1):
     n_ED = len(DoE)
     n_epochs =  n_epochs_add * (n_ED - n_EDini) + n_EDini
 
-    """  if(hidden_layers[worst_model_index] < 5):
-        hidden_layers[worst_model_index] += 1 
-        
-    else:
-        for i in range(len(hidden_layers)):
-            if(hidden_layers[i]<5):
-               
-                hidden_layers[i] +=1
-                break """
+   
     alpha = 1.5
-    num_layers_to_update = min(math.ceil(np.min(losses) + alpha * np.std(losses)), B//2)
+    perf_limit = np.min(validation_errors) + alpha * np.std(validation_errors)
+    num_layers_to_update = len(np.where(validation_errors > perf_limit)[0])
+    num_layers_to_update = min(num_layers_to_update , B//2)
+    num_layers_to_update = max(1,num_layers_to_update)
     print(num_layers_to_update)
-    num_layers_to_update = 3
-    print(num_layers_to_update)
+
     updated_hidden_layers = hidden_layers.copy()
 
     # Find the indices of the worst neural networks
-    worst_model_indices = np.argsort(losses)[-num_layers_to_update:]
-
+    worst_model_indices = np.argsort(validation_errors)[-num_layers_to_update:]
+    best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
+    print("worstindeices: ", worst_model_indices)
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-        if updated_hidden_layers[index] < 100:
+        if updated_hidden_layers[index] < 10:
             updated_hidden_layers[index] += 1
         else:
-            for i in range(len(updated_hidden_layers)):
-                if updated_hidden_layers[i] < 100:
-                    updated_hidden_layers[i] += 1
-                    break
+
+            k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
+            print("k", k)
+            replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
+            models[index] = models[replacement_model_index] 
 
     hidden_layers = updated_hidden_layers
+    print(hidden_layers)
     #print(function_calls)
     
     iter += 1  
-   
 
 
 

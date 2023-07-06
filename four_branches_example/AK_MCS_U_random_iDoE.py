@@ -3,12 +3,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
+import warnings
+warnings.filterwarnings("ignore")
 
-""" def performance_function(x1,x2):
-    return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
-
-
- """
 def performance_function(x1, x2):
     k = 6
     term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
@@ -83,7 +80,7 @@ while True:
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         
         cov_threshold = 0.05
-        if cov_pf < cov_threshold:
+        if cov_pf <= cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
             print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
             print("Coefficient of variation: {:.4%}".format(cov_pf))

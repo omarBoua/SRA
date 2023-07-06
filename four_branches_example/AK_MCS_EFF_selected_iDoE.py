@@ -3,14 +3,24 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
-import warnings
-warnings.filterwarnings("ignore")
+from scipy.stats import norm
 
 """ def performance_function(x1,x2):
     return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
 
 
  """
+
+def eff(g_hat_values, sigma_g_values):
+    a = 0
+    epsilon = 2 * np.square(sigma_g_values)
+
+    term1 = (g_hat_values - a) * (2 * norm.cdf((a - g_hat_values) / sigma_g_values) - norm.cdf((a - epsilon - g_hat_values) / sigma_g_values) - norm.cdf((a + epsilon - g_hat_values) / sigma_g_values))
+    term2 = -sigma_g_values * (2 * norm.pdf((a - g_hat_values) / sigma_g_values) - norm.pdf((a - epsilon - g_hat_values) / sigma_g_values) - norm.pdf((a + epsilon - g_hat_values) / sigma_g_values))
+    term3 = norm.cdf((a + epsilon - g_hat_values) / sigma_g_values) - norm.cdf((a - epsilon - g_hat_values) / sigma_g_values)
+
+    eff_values = term1 + term2 + term3
+    return eff_values
 def performance_function(x1, x2):
     k = 6
     term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
@@ -32,13 +42,8 @@ function_calls = 0
 
 # Stage 2: Definition of initial design of experiments (DoE)
 N1 = 12
-#uncomment for random selection
-""" n_EDini = N1 
-selected_indices = np.random.choice(len(S), N1, replace=False)
 
-DoE = S[selected_indices] """
 
-#uncomment for importance sampling
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
 closest_sample_index = np.argmin(distances_to_mean)
@@ -72,18 +77,17 @@ while True:
     nMC = len(S)
     G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
     Pf_hat = np.sum(G_hat < 0) / nMC
-    
+    function_calls_values.append(function_calls)
+    pf_hat_values.append(Pf_hat)
     # Stage 5: Identification of the best next point to evaluate
-    learning_values = np.abs(G_hat) / kriging_std
-    x_best_index = np.argmin(learning_values)
+    learning_values = eff(G_hat, kriging_std)
+
+    x_best_index = np.argmax(learning_values)
     x_best = S[x_best_index]
     # Stage 6: Stopping condition on learning
-    stopping_condition = min(learning_values) >= 2   
-    cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-    print(cov_pf)
-    if(cov_pf <= 0.01):
-        print("early")
-        break
+    stopping_condition = max(learning_values) <=0.001  
+    
+    
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
         # Stopping condition met, learning is stopped
@@ -114,8 +118,7 @@ while True:
         kriging.fit(scaled_DoE, Pf_values)
         # Go back to Stage 4
     iter += 1
-    function_calls_values.append(function_calls)
-    pf_hat_values.append(Pf_hat)
+    
     print("iter ",iter, ": ",Pf_hat)
 
 """ 

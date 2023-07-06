@@ -4,18 +4,16 @@ from sklearn.neural_network import MLPRegressor
 def g(X):
     global function_calls
     n = len(X)
-    sigma = np.std(X)
     function_calls += 1
-    return n + 3 * sigma * np.sqrt(n) - np.sum(X)
+    return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 
 pf_values = []
-np.random.seed(1)
 function_calls = 0
 for j in range(1):
     # Stage 1: Generation of Monte Carlo population
     nMC = 2000
-    n = 40 
+    n = 100 
 
 
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
@@ -35,11 +33,11 @@ for j in range(1):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(10,10,10,10), activation='tanh',solver = 'lbfgs',  max_iter = 10000)
+    mlp = MLPRegressor(hidden_layer_sizes=(10,10,10,10), activation='tanh',solver = 'lbfgs',  max_iter = 100000)
     mlp.fit(S, labels)
 
     test_size =100000
-    test_S  = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(test_size, 40))
+    test_S  = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(test_size, n))
     # Stage 4: prediction
    
 

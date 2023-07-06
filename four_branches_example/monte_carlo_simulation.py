@@ -20,7 +20,7 @@ class Monte_Carlo:
 
     # Set the random seed for reproducibility
     def __init__(self):
-        self.nMC = 1000000
+        self.nMC = 2500
         self.pf_values = []
         
     
