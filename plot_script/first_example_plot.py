@@ -3,9 +3,9 @@ import numpy as np
 
 # Define the performance function
 def performance_function(x1, x2):
-    k = 7
-    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    k = 8.5
+    term1 = 4 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 4 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
     term4 = (x2 - x1) + k / (2**0.5)
     
@@ -16,13 +16,13 @@ x2 = np.linspace(-8, 8, 10000)  # Adjust the range as per your requirement
 
 
 
-u1 = np.random.normal(0, 1, size= 3000)
-u2 = np.random.normal(0, 1, size= 3000)
+u1 = np.random.normal(0, 1, size= 1000000)
+u2 = np.random.normal(0, 1, size= 1000000)
 
 performance_values = performance_function(u1, u2)
 
 
-negative_values_indices = np.where(performance_values < 0)
+negative_values_indices = np.where(performance_values <= 0)
 positive_values_indices = np.where(performance_values > 0)
 
 # Plot the data points with negative performance function values in red

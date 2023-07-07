@@ -8,15 +8,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def g(X):
-    global function_calls
     n = len(X)
     sigma = np.std(X)
-    function_calls += 1
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 40  # Number of parameters
+n = 100  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -62,13 +60,14 @@ for i in range(N1):
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
-kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-3, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
+kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-3, 1e2)) # Decreased lower bound from 1e-2 to 1e-3
 kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
 
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
 function_calls_values = []
 pf_hat_values = []
+U_values_iter = []
 while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
@@ -80,15 +79,18 @@ while True:
     x_best_index = np.argmin(learning_values)
     x_best = S[x_best_index]
     # Stage 6: Stopping condition on learning
-    stopping_condition = min(learning_values) >= 2 
+    U_values_iter.append(min(learning_values))
+    stopping_condition = min(learning_values) >= 0.2
     print("std ", kriging_std[x_best_index]
            ) 
     print("G_hat", G_hat[x_best_index])
+    function_calls_values.append(function_calls)
+    pf_hat_values.append(Pf_hat)
     print(min(learning_values))
-
 
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
+        break
         # Stopping condition met, learning is stopped
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         print("cov", cov_pf)
@@ -116,64 +118,7 @@ while True:
         kriging.fit(scaled_DoE, Pf_values)        
         # Go back to Stage 4
     iter += 1
-    function_calls_values.append(function_calls)
-    pf_hat_values.append(Pf_hat)
+    
+
     print("iter ",iter, ": ",Pf_hat)
 
-""" 
-
-x1_vals = np.linspace(-6, 6, 1000)
-x2_vals = np.linspace(-6, 6, 1000)
-X1, X2 = np.meshgrid(x1_vals, x2_vals)
-
-# Calculate LSF values for each combination of x1 and x2
-Z = np.array([performance_function(x1, x2) for x1, x2 in zip(X1.flatten(), X2.flatten())])
-Z = Z.reshape(X1.shape)
-
-# Plotting the contour of LSF
-plt.contour(X1, X2, Z, levels=[0], colors='black')
-plt.xlabel('x1')
-plt.ylabel('x2')
-plt.title('LSF Contour')
-
-# Plotting the initial points in the design of experiment
-plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
-
-# Plotting the added points in the final design of experiment
-plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
-
-
-legend_elements = [
-    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
-    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
-    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
-]
-
-
-plt.legend(handles=legend_elements)
-
-plt.show() """
-
-
-# Plotting pf_hat values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'b-')
-plt.xlabel('function_calls')
-plt.ylabel('pf_hat')
-plt.title('Convergence Plot')
-
-
-# Indicate the last point
-last_point_calls = function_calls_values[-1]
-last_point_pf_hat = pf_hat_values[-1]
-plt.plot(last_point_calls, last_point_pf_hat, 'ro')
-plt.annotate(f'({last_point_calls}, {last_point_pf_hat})',
-             xy=(last_point_calls, last_point_pf_hat),
-             xytext=(last_point_calls  , last_point_pf_hat+last_point_pf_hat/10 ),
-             arrowprops=dict(facecolor='black', arrowstyle='->'))
-
-# Display the number of iterations
-plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
-         verticalalignment='top', horizontalalignment='right',
-         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-
-plt.show() 

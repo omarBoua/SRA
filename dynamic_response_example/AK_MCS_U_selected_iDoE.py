@@ -4,8 +4,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-
-
+import warnings
+warnings.filterwarnings("ignore")
 def g(c1, c2, m, r, t1, F1):
     w0 = np.sqrt((c1 * c2)/m)
     return 3 * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
@@ -58,7 +58,7 @@ scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
 kernel = C(1.0, (1e-2, 1e2)) * RBF(10, (1e-2, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=15)
+kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
 function_calls_values = []

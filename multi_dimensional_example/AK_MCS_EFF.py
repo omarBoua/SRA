@@ -19,15 +19,12 @@ def eff(g_hat_values, sigma_g_values):
     eff_values = term1 + term2 + term3
     return eff_values
 def g(X):
-    global function_calls
     n = len(X)
-    sigma = np.std(X)
-    function_calls += 1
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 40  # Number of parameters
+n = 100  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -96,6 +93,7 @@ while True:
            ) 
     print("G_hat", G_hat[x_best_index])
     print(max(learning_values))
+    print("iter ",iter, ": ",Pf_hat)
 
 
     # Stage 7: Update of the previous design of experiments with the best point
@@ -104,10 +102,10 @@ while True:
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         print("cov", cov_pf)
         cov_threshold = 0.05
-        if cov_pf < cov_threshold:
+        if cov_pf <= cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
-            print("AK-MCS finished. Probability of failure: {:.2e}".format(Pf_hat))
-            print("Coefficient of variation: {:.2%}".format(cov_pf))
+            print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
+            print("Coefficient of variation: {:.4%}".format(cov_pf))
             print("Number of calls to the performance function", function_calls)
             break
             # Stage 10: End of AK-MCS
@@ -129,7 +127,6 @@ while True:
     iter += 1
     function_calls_values.append(function_calls)
     pf_hat_values.append(Pf_hat)
-    print("iter ",iter, ": ",Pf_hat)
 
 """ 
 

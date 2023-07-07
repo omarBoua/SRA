@@ -2,18 +2,16 @@ import numpy as np
 from sklearn.neural_network import MLPRegressor
 #limit state function with two inputs x1 and x2
 def g(X):
-    global function_calls
     n = len(X)
-    function_calls += 1
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 
 pf_values = []
 function_calls = 0
-for j in range(1):
+for j in range(30):
     # Stage 1: Generation of Monte Carlo population
     nMC = 2000
-    n = 100 
+    n = 40 
 
 
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
@@ -33,7 +31,7 @@ for j in range(1):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(10,10,10,10), activation='tanh',solver = 'lbfgs',  max_iter = 100000)
+    mlp = MLPRegressor(hidden_layer_sizes=(25,25), activation='tanh',solver = 'lbfgs',  max_iter = 100000)
     mlp.fit(S, labels)
 
     test_size =100000
@@ -52,3 +50,4 @@ for j in range(1):
     
     print(function_calls)
 print(np.mean(pf_values))
+print(np.std(pf_values))

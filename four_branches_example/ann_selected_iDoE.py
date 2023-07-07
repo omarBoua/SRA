@@ -49,9 +49,9 @@ function_calls = 0
 #limit state function with two inputs x1 and x2
 def LSF(x1, x2):
     global function_calls
-    k = 6
-    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    k = 8.5
+    term1 = 4 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 4 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
     term4 = (x2 - x1) + k / (2**0.5)
     function_calls += 1
@@ -174,13 +174,12 @@ while(1):
     cov_pf_iter = np.std(pf_values) / pf_hat
     cov_mcs = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
     print("cov", cov_pf_iter)
-    print("diff", pf_max - pf_min - np.std(pf_values))
-    print("maxmin: ", (pf_max - pf_min) / pf_hat)
+    
     if((pf_max - pf_min) / pf_hat < 0.05):
         break
-    if(cov_pf_iter <= 0.05 and cov_mcs < 0.05 ):
+    if(cov_pf_iter <= 0.05  ):
             print("cov_mcs: ", cov_mcs)
-            
+            print("calls", function_calls)
             break
     
 
@@ -216,14 +215,12 @@ while(1):
     num_layers_to_update = len(np.where(validation_errors > perf_limit)[0])
     num_layers_to_update = min(num_layers_to_update , B//2)
     num_layers_to_update = max(1,num_layers_to_update)
-    print(num_layers_to_update)
 
     updated_hidden_layers = hidden_layers.copy()
 
     # Find the indices of the worst neural networks
     worst_model_indices = np.argsort(validation_errors)[-num_layers_to_update:]
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
-    print("worstindeices: ", worst_model_indices)
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
         if updated_hidden_layers[index] < 5:
@@ -231,13 +228,10 @@ while(1):
         else:
 
             k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
-            print("k", k)
             replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
             models[index] = models[replacement_model_index] 
 
     hidden_layers = updated_hidden_layers
-    print(hidden_layers)
-    #print(function_calls)
     
     iter += 1  
    

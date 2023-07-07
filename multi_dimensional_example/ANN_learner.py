@@ -30,10 +30,7 @@ function_calls = 0
 #limit state function with two inputs x1 and x2
 
 def g(X):
-    global function_calls
     n = len(X)
-    sigma = np.std(X)
-    function_calls += 1
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 
@@ -92,7 +89,6 @@ for i in range(n_EDini):
 scaler = StandardScaler()
 DoE = initial_design
 scaled_DoE = scaler.fit_transform(DoE)
-#kernel = ConstantKernel(1.0) * RBF(1.0)
 
 
  
@@ -185,14 +181,14 @@ while(1):
     num_layers_to_update = len(np.where(validation_errors > perf_limit)[0])
     num_layers_to_update = min(num_layers_to_update , B//2)
     num_layers_to_update = max(1,num_layers_to_update)
-    print(num_layers_to_update)
+
+
 
     updated_hidden_layers = hidden_layers.copy()
 
     # Find the indices of the worst neural networks
     worst_model_indices = np.argsort(validation_errors)[-num_layers_to_update:]
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
-    print("worstindeices: ", worst_model_indices)
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
         if updated_hidden_layers[index] < 10:
@@ -200,13 +196,10 @@ while(1):
         else:
 
             k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
-            print("k", k)
             replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
             models[index] = models[replacement_model_index] 
 
     hidden_layers = updated_hidden_layers
-    print(hidden_layers)
-    #print(function_calls)
     
     iter += 1  
 
@@ -235,103 +228,3 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
 
 plt.show() 
 
-""" 
-#uncomment for plotting design of experiment
-
-x1_vals = np.linspace(-6, 6, 1000)
-x2_vals = np.linspace(-6, 6, 1000)
-X1, X2 = np.meshgrid(x1_vals, x2_vals)
-
-# Calculate LSF values for each combination of x1 and x2
-Z = np.array([LSF(x1, x2) for x1, x2 in zip(X1.flatten(), X2.flatten())])
-Z = Z.reshape(X1.shape)
-
-# Plotting the contour of LSF
-plt.contour(X1, X2, Z, levels=[0], colors='black')
-plt.xlabel('x1')
-plt.ylabel('x2')
-plt.title('LSF Contour')
-
-# Plotting the initial points in the design of experiment
-plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
-
-# Plotting the added points in the final design of experiment
-plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
-
-
-legend_elements = [
-    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
-    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
-    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
-]
-
-
-plt.legend(handles=legend_elements)
-
-plt.show() """
-
-
-# uncomment to plot cov_pf_values
-""" multiples_of_5 = [i for i in range(5, iter + 1, 5)]
-
-plt.plot(multiples_of_5, cov_pf_values, 'ro-', label='Ratio of Convergence')
-
-
-# Plotting pf_mcs as a fixed value
-
-plt.xlabel('Iterations')
-plt.ylabel('RoC')
-plt.title('Convergence Plot')
-plt.legend()
-plt.xticks(multiples_of_5)
-# Indicate the last point
-
-
-# Display the number of iterations
-plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
-         verticalalignment='top', horizontalalignment='left',
-         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-
-plt.show() """
-#uncomment for plotting pf_max, pf_min, pf_hat and pf_mcs
-""" 
-# Plotting pf_hat, pf_max, and pf_min values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
-plt.plot(function_calls_values, pf_max_values, 'r--', label='pf_max')
-plt.plot(function_calls_values, pf_min_values, 'r--', label='pf_min')
-
-# Plotting pf_mcs as a fixed value
-pf_mcs = 0.004447
-plt.axhline(y=pf_mcs, color='purple', linestyle=':', label='pf_mcs')
-
-plt.xlabel('Function Calls')
-plt.ylabel('pf')
-plt.title('Convergence Plot')
-plt.legend()
-
-# Indicate the last point
-last_point_calls = function_calls_values[-1]
-last_point_pf_hat = pf_hat_values[-1]
-plt.plot(last_point_calls, last_point_pf_hat, 'ro')
-plt.annotate(f'({last_point_calls}, {last_point_pf_hat:.4e})',
-             xy=(last_point_calls, last_point_pf_hat),
-             xytext=(last_point_calls , last_point_pf_hat + last_point_pf_hat ),
-             arrowprops=dict(facecolor='black', arrowstyle='->'))
-
-
-# Display the number of iterations
-plt.text(0.05, 0.95, f'Iterations until convergence: {iter}',
-         verticalalignment='top', horizontalalignment='left',
-         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-
-plt.show()
- """
-
-#uncomment for clustering plot
-"""  # Create a scatter plot of the data points with colors based on their cluster labels
-plt.scatter(S[:, 0], S[:, 1], c=cluster_labels)
-plt.title("K-means Clustering")
-plt.xlabel("Feature 1")
-plt.ylabel("Feature 2")
-plt.show()
- """
