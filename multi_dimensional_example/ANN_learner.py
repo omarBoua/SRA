@@ -35,7 +35,7 @@ def g(X):
 
 
 #1. generate nMC 
-nMC = 300000 # Number of instances to generate
+nMC = 100000 # Number of instances to generate
 n = 40  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
@@ -95,7 +95,7 @@ scaled_DoE = scaler.fit_transform(DoE)
 #3. train the B neural network
 B = 50  #number of neural networks
 iter = 0 
-hidden_layers = np.append(np.repeat([2,3,4,5,6,7,8,9,10], 5),[10,10,10,10,10])
+hidden_layers = np.append(np.repeat([2,3,4,5,6,7,8,9,10], 5),[2,3,4,5,6])
 
 models = [] 
 for j in hidden_layers:
@@ -118,7 +118,7 @@ while(1):
 
         model.set_params(**params)
         model.set_params(max_iter = n_epochs)
-        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels, test_size= 0.2)
         model.fit(X_train,y_train)
         y_test_pred = model.predict(X_test)
         validation_errors.append(mean_squared_error(y_test, y_test_pred ))
@@ -191,7 +191,7 @@ while(1):
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-        if updated_hidden_layers[index] < 10:
+        if updated_hidden_layers[index] < 81:
             updated_hidden_layers[index] += 1
         else:
 

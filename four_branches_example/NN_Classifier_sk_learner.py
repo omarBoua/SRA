@@ -96,4 +96,3 @@ for i in range(25):
     print(Pf_hat)
 print(np.mean(pf_values))
 print(np.std(pf_values)/np.mean(pf_values))
-print(np.mean(proba_shiha))

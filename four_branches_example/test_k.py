@@ -45,7 +45,7 @@ class Monte_Carlo:
         return self.pf_values
     
 mc = Monte_Carlo()
-pf_values = mc.simulate_iter(30)
+pf_values = mc.simulate_iter(10)
 mean = np.mean(pf_values)
 std = np.var(pf_values)
 print("mean: ", mean)

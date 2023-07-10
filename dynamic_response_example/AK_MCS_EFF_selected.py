@@ -22,10 +22,10 @@ def eff(g_hat_values, sigma_g_values):
 
 def g(c1, c2, m, r, t1, F1):
     w0 = np.sqrt((c1 * c2)/m)
-    return 3 * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
+    return 1.5 * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
 
 # Stage 1: Generation of Monte Carlo population
-nMC = 70000
+nMC = 1000000
 m = np.random.normal(1, 0.05, size=nMC)
 c1 = np.random.normal(1, 0.1, size=nMC)
 c2 = np.random.normal(0.1, 0.01, size=nMC)

@@ -9,7 +9,6 @@ warnings.filterwarnings("ignore")
 
 def g(X):
     n = len(X)
-    sigma = np.std(X)
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 function_calls = 0
@@ -90,7 +89,7 @@ while True:
 
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
-        break
+        
         # Stopping condition met, learning is stopped
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         print("cov", cov_pf)

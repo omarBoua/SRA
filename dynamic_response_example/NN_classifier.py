@@ -11,21 +11,20 @@ def g(c1, c2, m, r, t1, F1):
 pf_values = []
 #np.random.seed(1222)
 
-for i in range(22):
+for i in range(25):
     # Stage 1: Generation of Monte Carlo population
     nMC = 5000
     
     generator = BalancedPopulationGenerator(nMC)
     generator.generate_data()
     generator.balance_population()
-    generator.print_population_info()
 # Get the generated population
 
     S,classes = generator.get_population()
    
     # Stage 3: Computation of MLP model
     
-    mlp = MLPClassifier(hidden_layer_sizes=(25), activation= 'logistic', solver = 'adam',learning_rate = 'constant',max_iter= 10000, learning_rate_init= 0.01)  # Customize the hidden layer sizes as needed
+    mlp = MLPClassifier(hidden_layer_sizes=(13,13), activation= 'logistic', solver = 'adam',learning_rate = 'constant',max_iter= 10000, learning_rate_init= 0.01)  # Customize the hidden layer sizes as needed
     mlp.fit(S, classes)
 
 
@@ -41,10 +40,13 @@ for i in range(22):
     # Stage 4: prediction
     S = np.column_stack((test_c1, test_c2, test_m, test_r, test_t1, test_F1))
 
-    classes_hat = mlp.predict(S)
+    proba = mlp.predict_proba(S)
+    threshold = 0.05
+    classes_hat = np.where(proba[:, 1] > threshold, 1, 0)
 
 
     Pf_hat = np.sum(classes_hat == 0) / test_size
     pf_values.append(Pf_hat)
     print(Pf_hat)
 print(np.mean(pf_values))
+print(np.std(pf_values) /np.mean(pf_values))

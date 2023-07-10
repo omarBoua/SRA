@@ -11,7 +11,7 @@ def g(c1, c2, m, r, t1, F1):
     return 3 * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
 
 # Stage 1: Generation of Monte Carlo population
-nMC = 70000
+nMC = 100000
 m = np.random.normal(1, 0.05, size=nMC)
 c1 = np.random.normal(1, 0.1, size=nMC)
 c2 = np.random.normal(0.1, 0.01, size=nMC)
@@ -76,7 +76,7 @@ while True:
     # Stage 6: Stopping condition on learning
     stopping_condition = min(learning_values) >= 2
   
-
+    print(min(learning_values))
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
         # Stopping condition met, learning is stopped

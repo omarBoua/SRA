@@ -48,7 +48,7 @@ def g(c1, c2, m, r, t1, F1):
 
 
 #1. generate nMC 
-nMC = 300000
+nMC = 70000
 """ 
 x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
@@ -164,7 +164,7 @@ while(1):
     print("diff", pf_max - pf_min - np.std(pf_values))
     print("maxmin: ", (pf_max - pf_min) / pf_hat)
     
-    if(cov_pf_iter <= 0.05 and cov_mcs < 0.05 ):
+    if(cov_pf_iter <= 0.05  ):
             print("cov_mcs: ", cov_mcs)
             
             break
@@ -221,7 +221,7 @@ while(1):
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-            if updated_hidden_layers[index] < 5:
+            if updated_hidden_layers[index] < 13:
                 updated_hidden_layers[index] += 1
             else:
 

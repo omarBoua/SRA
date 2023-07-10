@@ -2,7 +2,7 @@ import numpy as np
 def g(X):
     global function_calls
     n = len(X)
-    sigma = np.std(X)
+    
     function_calls += 1
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
@@ -12,9 +12,9 @@ def g(X):
 pf_values = []
 for i in range(5):
     function_calls = 0
-    nMC = 300000 # Number of instances to generate
+    nMC = 10000 # Number of instances to generate
     n = 40  # Number of parameters
-    n = 100
+    n = 40
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
     sigma_lognormal = np.sqrt(np.log(1 + 0.2**2))

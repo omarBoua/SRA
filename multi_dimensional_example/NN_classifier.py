@@ -25,7 +25,7 @@ for i in range(30):
    
     # Stage 3: Computation of MLP model
     
-    mlp = MLPClassifier(hidden_layer_sizes=(25,25), activation= 'logistic', solver = 'adam',max_iter= 100000)  # Customize the hidden layer sizes as needed
+    mlp = MLPClassifier(hidden_layer_sizes=(80,80), activation= 'logistic', solver = 'adam',max_iter= 100000)  # Customize the hidden layer sizes as needed
     mlp.fit(S, classes)
 
 

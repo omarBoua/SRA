@@ -24,7 +24,7 @@ def g(X):
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 100  # Number of parameters
+n = 40  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -94,7 +94,8 @@ while True:
     print("G_hat", G_hat[x_best_index])
     print(max(learning_values))
     print("iter ",iter, ": ",Pf_hat)
-
+    function_calls_values.append(function_calls)
+    pf_hat_values.append(Pf_hat)
 
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
@@ -125,8 +126,7 @@ while True:
         kriging.fit(scaled_DoE, Pf_values)        
         # Go back to Stage 4
     iter += 1
-    function_calls_values.append(function_calls)
-    pf_hat_values.append(Pf_hat)
+    
 
 """ 
 

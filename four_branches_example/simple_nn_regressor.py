@@ -15,7 +15,7 @@ pf_values = []
 #np.random.seed(29)
 for i in range(25):
     # Stage 1: Generation of Monte Carlo population
-    nMC = 2000
+    nMC = 2500
     x1 = np.random.normal(0, 1, size=nMC)
     x2 = np.random.normal(0, 1, size=nMC)
     S = np.column_stack((x1, x2))
@@ -54,4 +54,4 @@ for i in range(25):
     
     
 print(np.mean(pf_values))
-print(np.std(pf_values))
+print(np.std(pf_values) / np.mean(pf_values))

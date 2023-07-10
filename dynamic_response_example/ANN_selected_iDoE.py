@@ -29,7 +29,16 @@ pf_min_values = []
 cov_pf_values = []
 function_calls = 0
 
-
+#limit state function with two inputs x1 and x2
+""" def LSF(x1, x2):
+    global function_calls
+    k = 6
+    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    term3 = (x1 - x2) + k / (2**0.5)
+    term4 = (x2 - x1) + k / (2**0.5)
+    function_calls += 1
+    return min(term1, term2, term3, term4) """
 def g(c1, c2, m, r, t1, F1):
     global function_calls
     w0 = np.sqrt((c1 * c2)/m)
@@ -39,7 +48,12 @@ def g(c1, c2, m, r, t1, F1):
 
 
 #1. generate nMC 
-nMC = 300000
+nMC = 70000
+""" 
+x1 = np.random.normal(0,1,size = nMC)
+x2 = np.random.normal(0,1,size = nMC )
+S = np.column_stack((x1, x2))
+ """
 
 m = np.random.normal(1, 0.05, size=nMC)
 c1 = np.random.normal(1, 0.1, size=nMC)
@@ -66,27 +80,17 @@ cluster_labels = kmeans.labels_
 
 
 #2. initial experimental design
-
-#2. initial experimental design
 n_EDini = 50
 n_epochs = n_EDini
-# Step 1: Find the sample closest to the mean
-mean_population = np.mean(S, axis=0)
-distances_to_mean = cdist([mean_population], S)
-closest_sample_index = np.argmin(distances_to_mean)
-initial_design = [S[closest_sample_index]]
 
 
+selected_indices = np.random.choice(len(S), n_EDini, replace=False)
+DoE = S[selected_indices]
+initial_design = np.array(DoE)
 
-
-# Step 2: Select the remaining points iteratively
-for _ in range(n_EDini - 1):
-    distances_to_design = cdist(initial_design, S)
-    farthest_sample_index = np.argmax(np.min(distances_to_design, axis=0))
-    initial_design.append(S[farthest_sample_index])
 
 labels = np.zeros(n_EDini) 
-initial_design = np.array(initial_design)
+
 
 for i in range(n_EDini):
     labels[i] = g(initial_design[i, 0], 
@@ -160,7 +164,7 @@ while(1):
     print("diff", pf_max - pf_min - np.std(pf_values))
     print("maxmin: ", (pf_max - pf_min) / pf_hat)
     
-    if(cov_pf_iter <= 0.05 and cov_mcs < 0.05 ):
+    if(cov_pf_iter <= 0.05  ):
             print("cov_mcs: ", cov_mcs)
             
             break
@@ -217,11 +221,12 @@ while(1):
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-            if updated_hidden_layers[index] < 5:
+            if updated_hidden_layers[index] < 13:
                 updated_hidden_layers[index] += 1
             else:
 
                 k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
+                print("k", k)
                 replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
                 models[index] = models[replacement_model_index] 
 

@@ -22,9 +22,9 @@ def eff(g_hat_values, sigma_g_values):
     eff_values = term1 + term2 + term3
     return eff_values
 def performance_function(x1, x2):
-    k = 8.5
-    term1 = 4 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 4 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    k = 6
+    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
     term4 = (x2 - x1) + k / (2**0.5)
     

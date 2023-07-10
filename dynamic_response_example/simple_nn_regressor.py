@@ -16,7 +16,7 @@ def g(c1, c2, m, r, t1, F1):
 pf_values = []
 
 function_calls = 0
-for j in range(100):
+for j in range(25):
     #np.random.seed(1350)
     # Stage 1: Generation of Monte Carlo population
     nMC = 200
@@ -66,6 +66,6 @@ for j in range(100):
     
     pf_values.append(Pf_hat)
     
-    
+print()
 print(np.mean(pf_values))
-print(np.std(pf_values))
+print(np.std(pf_values)/np.mean(pf_values))

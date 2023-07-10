@@ -49,9 +49,9 @@ function_calls = 0
 #limit state function with two inputs x1 and x2
 def LSF(x1, x2):
     global function_calls
-    k = 8.5
-    term1 = 4 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 4 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    k = 6
+    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
     term4 = (x2 - x1) + k / (2**0.5)
     function_calls += 1
