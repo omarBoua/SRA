@@ -59,8 +59,8 @@ for i in range(N1):
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
-kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-3, 1e2)) # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
+kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2)) # Decreased lower bound from 1e-2 to 1e-3
+kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=30)
 
 kriging.fit(scaled_DoE, Pf_values)
 iter =0

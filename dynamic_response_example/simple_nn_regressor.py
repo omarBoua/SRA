@@ -42,7 +42,7 @@ for j in range(25):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(13,13), activation='tanh',solver = 'lbfgs',  max_iter = 10000)
+    mlp = MLPRegressor(hidden_layer_sizes=(13,13), activation='tanh',solver = 'lbfgs',  max_iter = 100000)
     mlp.fit(S, labels)
 
     test_size =100000

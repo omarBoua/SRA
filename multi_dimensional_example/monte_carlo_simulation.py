@@ -10,11 +10,10 @@ def g(X):
 #np.random.seed(4)
 
 pf_values = []
-for i in range(5):
+for i in range(10):
     function_calls = 0
-    nMC = 10000 # Number of instances to generate
+    nMC = 300000 # Number of instances to generate
     n = 40  # Number of parameters
-    n = 40
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
     sigma_lognormal = np.sqrt(np.log(1 + 0.2**2))
@@ -38,3 +37,4 @@ for i in range(5):
     pf_values.append(Pf)
 
 print("Probability of failure: {:.4e}".format(np.mean(pf_values)))
+print(np.std(pf_values)/np.mean(pf_values))

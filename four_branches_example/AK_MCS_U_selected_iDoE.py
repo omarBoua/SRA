@@ -63,9 +63,9 @@ for i in range(N1):
 # Stage 3: Computation of Kriging model
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
-#kernel = ConstantKernel(1.0) * RBF(1.0)
-kernel = C(1.0, (1e-2, 1e2)) * RBF(10, (1e-2, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor()
+kernel = C(1.0) * RBF(1.0)
+kernel = C(1.0, (1e-3, 1e3)) * RBF([0.5,0.5], (1e-3, 1e3))  # Decreased lower bound from 1e-2 to 1e-3
+kriging = GaussianProcessRegressor()#kernel = kernel, n_restarts_optimizer=100)
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
 function_calls_values = []
@@ -74,7 +74,7 @@ while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
     G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
-    Pf_hat = np.sum(G_hat < 0) / nMC
+    Pf_hat = np.sum(G_hat <= 0) / nMC
     
     # Stage 5: Identification of the best next point to evaluate
     learning_values = np.abs(G_hat) / kriging_std
@@ -83,10 +83,8 @@ while True:
     # Stage 6: Stopping condition on learning
     stopping_condition = min(learning_values) >= 2   
     cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-    print(cov_pf)
-    if(cov_pf <= 0.01):
-        print("early")
-        break
+    print( min(learning_values))
+    
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
         # Stopping condition met, learning is stopped
@@ -98,6 +96,7 @@ while True:
             print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
             print("Coefficient of variation: {:.4%}".format(cov_pf))
             print("Number of calls to the performance function", function_calls)
+            print(kriging.kernel_.get_params()["k2__length_scale"])
             break
             # Stage 10: End of AK-MCS
         else:
@@ -157,8 +156,8 @@ plt.show() """
 
 
 # Plotting pf_hat values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'b-')
-plt.xlabel('function_calls')
+#plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf values')  # 'r-' specifies red color
+plt.plot(function_calls_values, np.log(pf_hat_values), 'b-', label='log pf_hat values')  # 'b-' specifies blue colorplt.xlabel('function_calls')
 plt.ylabel('pf_hat')
 plt.title('Convergence Plot')
 
@@ -177,4 +176,6 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
+plt.show() 
+plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf values')  # 'r-' specifies red color
 plt.show() 

@@ -24,4 +24,4 @@ for i in range(30):
     pf_values.append(Pf)
 
 print(np.mean(pf_values))
-print(np.std(pf_values))
+print(np.std(pf_values)/np.mean(pf_values))
