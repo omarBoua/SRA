@@ -47,6 +47,6 @@ class Monte_Carlo:
 mc = Monte_Carlo()
 pf_values = mc.simulate_iter(20)
 mean = np.mean(pf_values)
-std = np.var(pf_values)
+std = np.std(pf_values)
 print("mean: ", mean)
 print("cov: ", std/mean)

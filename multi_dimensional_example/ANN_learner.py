@@ -30,13 +30,15 @@ function_calls = 0
 #limit state function with two inputs x1 and x2
 
 def g(X):
+    global function_calls
+    function_calls += 1
     n = len(X)
     return n + 3 * 0.2 * np.sqrt(n) - np.sum(X)
 
 
 #1. generate nMC 
-nMC = 100000 # Number of instances to generate
-n = 40  # Number of parameters
+nMC = 300000 # Number of instances to generate
+n = 25  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -46,11 +48,12 @@ S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n
 
 
 n_epochs_add = 5
-n_clusters = 3
 n_add = 3 
 
+n_clusters = n_add
+
 # Perform k-means clustering
-kmeans = KMeans(n_clusters=n_clusters, max_iter=5, random_state=0)
+kmeans = KMeans(n_clusters=n_clusters, max_iter=5)
 cluster_labels = kmeans.fit_predict(S)
 cluster_labels = kmeans.labels_
 
@@ -61,7 +64,7 @@ cluster_labels = kmeans.labels_
 
 #2. initial experimental design
 n_EDini = 50
-n_epochs = n_EDini
+n_epochs = 100
 # Step 1: Find the sample closest to the mean
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
@@ -95,11 +98,11 @@ scaled_DoE = scaler.fit_transform(DoE)
 #3. train the B neural network
 B = 50  #number of neural networks
 iter = 0 
-hidden_layers = np.append(np.repeat([2,3,4,5,6,7,8,9,10], 5),[2,3,4,5,6])
+hidden_layers = np.repeat([2,3,4,5,6,7,8,9,10,11], 5)
 
 models = [] 
 for j in hidden_layers:
-    hidden_layer_sizes = (j,j,j,j)
+    hidden_layer_sizes = (j,j,j)
     model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
     models.append(model)
     
@@ -114,11 +117,11 @@ while(1):
 
         new_hidden_layer_size = hidden_layers[index_model]
 
-        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size)
+        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size)
 
         model.set_params(**params)
         model.set_params(max_iter = n_epochs)
-        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels, test_size= 0.2)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels, test_size= 0.1)
         model.fit(X_train,y_train)
         y_test_pred = model.predict(X_test)
         validation_errors.append(mean_squared_error(y_test, y_test_pred ))
@@ -191,7 +194,7 @@ while(1):
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-        if updated_hidden_layers[index] < 81:
+        if updated_hidden_layers[index] < 11:
             updated_hidden_layers[index] += 1
         else:
 

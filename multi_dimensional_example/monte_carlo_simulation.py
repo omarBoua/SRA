@@ -12,8 +12,8 @@ def g(X):
 pf_values = []
 for i in range(10):
     function_calls = 0
-    nMC = 300000 # Number of instances to generate
-    n = 40  # Number of parameters
+    nMC = 3000000 # Number of instances to generate
+    n = 50 # Number of parameters
     mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
     sigma_lognormal = np.sqrt(np.log(1 + 0.2**2))
@@ -35,6 +35,7 @@ for i in range(10):
         # Calculate the probability of failure
     Pf = failure_count / nMC
     pf_values.append(Pf)
+    print(np.sqrt(1 - Pf) / (np.sqrt(Pf* nMC) ))
 
 print("Probability of failure: {:.4e}".format(np.mean(pf_values)))
 print(np.std(pf_values)/np.mean(pf_values))

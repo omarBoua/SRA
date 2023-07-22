@@ -112,7 +112,7 @@ scaled_DoE = scaler.fit_transform(DoE)
 #3. train the B neural network
 B = 50  #number of neural networks
 iter = 0 
-hidden_layers = np.repeat([2,3,4,5,6,7,8,9,10,11,12,13], 5)
+hidden_layers = np.repeat([2,3,4,5,6,7,8,9,10,2], 5)
 
 last_five_iter_scores = np.zeros(5)
 models = [] 
@@ -163,7 +163,7 @@ while(1):
     print("cov", cov_pf_iter)
     print("diff", pf_max - pf_min - np.std(pf_values))
     print("maxmin: ", (pf_max - pf_min) / pf_hat)
-    
+    cov_pf_iter = (pf_max - pf_min)/pf_hat
     if(cov_pf_iter <= 0.05  ):
             print("cov_mcs: ", cov_mcs)
             
@@ -273,9 +273,7 @@ plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf_hat')
 plt.plot(function_calls_values, pf_max_values, 'r--', label='pf_max')
 plt.plot(function_calls_values, pf_min_values, 'r--', label='pf_min')
 
-# Plotting pf_mcs as a fixed value
-pf_mcs = 0.004447
-plt.axhline(y=pf_mcs, color='purple', linestyle=':', label='pf_mcs')
+
 
 plt.xlabel('Function Calls')
 plt.ylabel('pf')

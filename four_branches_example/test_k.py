@@ -20,7 +20,7 @@ class Monte_Carlo:
 
     # Set the random seed for reproducibility
     def __init__(self):
-        self.nMC = 1000000
+        self.nMC = 10000000
         self.pf_values = []
         
     
@@ -45,9 +45,9 @@ class Monte_Carlo:
         return self.pf_values
     
 mc = Monte_Carlo()
-pf_values = mc.simulate_iter(10)
+pf_values = mc.simulate_iter(20)
 mean = np.mean(pf_values)
-std = np.var(pf_values)
+std = np.std(pf_values)
 print("mean: ", mean)
 print("std: ", std)
 print("cov: ", std/mean)

@@ -1,20 +1,14 @@
 import numpy as np
 from imblearn.over_sampling import SMOTE
-
+import math
 class BalancedPopulationGenerator:
     def __init__(self, nMC):
         self.nMC = nMC
         self.S = None
         self.classes = None
 
-    def performance_function(self, x1, x2):
-        k = 6
-        term1 = 3 + 0.1 * (x1 - x2) ** 2 - (x1 + x2) / (np.sqrt(2))
-        term2 = 3 + 0.1 * (x1 - x2) ** 2 + (x1 + x2) / (np.sqrt(2))
-        term3 = (x1 - x2) + k / (2 ** 0.5)
-        term4 = (x2 - x1) + k / (2 ** 0.5)
-
-        return min(term1, term2, term3, term4)
+    def performance_function(self, x1,x2):
+        return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
 
     def generate_data(self):
         u1 = np.random.normal(0, 1, size=self.nMC)

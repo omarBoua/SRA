@@ -162,6 +162,9 @@ plt.ylabel('pf_hat')
 plt.title('Convergence Plot')
 
 
+plt.show() 
+plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf values')  # 'r-' specifies red color
+
 # Indicate the last point
 last_point_calls = function_calls_values[-1]
 last_point_pf_hat = pf_hat_values[-1]
@@ -176,6 +179,4 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
-plt.show() 
-plt.plot(function_calls_values, pf_hat_values, 'r-', label='pf values')  # 'r-' specifies red color
 plt.show() 

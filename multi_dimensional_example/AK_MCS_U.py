@@ -13,7 +13,7 @@ def g(X):
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 100  # Number of parameters
+n = 5  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -28,7 +28,7 @@ S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n
 
 
 # Stage 2: Definition of initial design of experiments (DoE)
-N1 = 50
+N1 = 12
 n_EDini = N1 
 
 mean_population = np.mean(S, axis=0)
@@ -58,9 +58,11 @@ for i in range(N1):
 # Stage 3: Computation of Kriging model
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
+scaled_S = scaler.transform(S)
+
 #kernel = ConstantKernel(1.0) * RBF(1.0)
-kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2)) # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=30)
+kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-3, 1e3)) # Decreased lower bound from 1e-2 to 1e-3
+kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=300)
 
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
@@ -70,7 +72,7 @@ U_values_iter = []
 while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
-    G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
+    G_hat, kriging_std = kriging.predict(scaled_S,return_std=True)
     Pf_hat = np.sum(G_hat <= 0) / nMC
     
     # Stage 5: Identification of the best next point to evaluate
@@ -79,7 +81,7 @@ while True:
     x_best = S[x_best_index]
     # Stage 6: Stopping condition on learning
     U_values_iter.append(min(learning_values))
-    stopping_condition = min(learning_values) >= 0.2
+    stopping_condition = min(learning_values) >= 2
     print("std ", kriging_std[x_best_index]
            ) 
     print("G_hat", G_hat[x_best_index])
