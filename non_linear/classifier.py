@@ -47,7 +47,7 @@ for i in range(25):
 
     print(np.sum(classes <= 0))
     # Stage 3: Computation of MLP model
-    mlp = MLPClassifier(hidden_layer_sizes=(25), activation= 'logistic', solver = 'adam',max_iter= 100000, early_stopping = False)  # Customize the hidden layer sizes as needed
+    mlp = MLPClassifier(hidden_layer_sizes=(25), activation= 'logistic', solver = 'lbfgs',max_iter= 100000, early_stopping = False)  # Customize the hidden layer sizes as needed
     mlp.fit(S, classes)
 
     test_size =60000

@@ -38,7 +38,7 @@ def g(X):
 
 #1. generate nMC 
 nMC = 300000 # Number of instances to generate
-n = 25  # Number of parameters
+n = 10  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -102,7 +102,7 @@ hidden_layers = np.repeat([2,3,4,5,6,7,8,9,10,11], 5)
 
 models = [] 
 for j in hidden_layers:
-    hidden_layer_sizes = (j,j,j)
+    hidden_layer_sizes = (j,j)
     model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
     models.append(model)
     
@@ -117,11 +117,11 @@ while(1):
 
         new_hidden_layer_size = hidden_layers[index_model]
 
-        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size)
+        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size)
 
         model.set_params(**params)
         model.set_params(max_iter = n_epochs)
-        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels, test_size= 0.1)
+        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels, test_size= 0.2)
         model.fit(X_train,y_train)
         y_test_pred = model.predict(X_test)
         validation_errors.append(mean_squared_error(y_test, y_test_pred ))
@@ -146,7 +146,7 @@ while(1):
    
     cov_pf = np.std(pf_values)/ pf_hat
     print("cov: ", cov_pf)
-    if(cov_pf <= eps_pf):
+    if((pf_max - pf_min)/pf_hat <= eps_pf):
         break
   
         
@@ -194,7 +194,7 @@ while(1):
     best_model_indices = np.argsort(validation_errors)[:num_layers_to_update]
 # Update the hidden layers of the worst neural networks
     for index in worst_model_indices:
-        if updated_hidden_layers[index] < 11:
+        if updated_hidden_layers[index] < 2*n+1:
             updated_hidden_layers[index] += 1
         else:
 

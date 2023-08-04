@@ -9,7 +9,7 @@ def LSF(x1,x2):
 pf_values = []
 
 #np.random.seed(29)
-for i in range(30):
+for i in range(1):
     # Stage 1: Generation of Monte Carlo population
     nMC = 2000
     x1 = np.random.normal(0, 1, size=nMC)
@@ -29,7 +29,7 @@ for i in range(30):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(15,15,15), activation='tanh' ,solver = 'lbfgs',  max_iter = 100000)
+    mlp = MLPRegressor(hidden_layer_sizes=(5,5,5,5,5,5), activation='tanh' ,solver = 'lbfgs',  max_iter = 100000)
     mlp.fit(S, labels)
 
     test_size =1000000

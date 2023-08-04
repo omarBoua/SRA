@@ -13,7 +13,7 @@ def g(X):
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 5  # Number of parameters
+n = 100  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -28,7 +28,7 @@ S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n
 
 
 # Stage 2: Definition of initial design of experiments (DoE)
-N1 = 12
+N1 = 50
 n_EDini = N1 
 
 mean_population = np.mean(S, axis=0)

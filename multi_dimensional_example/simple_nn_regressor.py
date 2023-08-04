@@ -8,7 +8,7 @@ def g(X):
 
 pf_values = []
 function_calls = 0
-for j in range(40):
+for j in range(1):
     # Stage 1: Generation of Monte Carlo population
     nMC = 500
     n = 100 
@@ -31,10 +31,10 @@ for j in range(40):
 
     # Stage 3: Computation of MLP model
 
-    mlp = MLPRegressor(hidden_layer_sizes=(10,10,10,10,10), activation='tanh',solver = 'lbfgs',  max_iter = 10000, verbose= True,learning_rate= "adaptive")
+    mlp = MLPRegressor(hidden_layer_sizes=(201,201,201), activation='tanh',solver = 'lbfgs',  max_iter = 2000, verbose= True,learning_rate= "adaptive")
     mlp.fit(S, labels)
 
-    test_size =100000
+    test_size =1000000
     test_S  = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(test_size, n))
     # Stage 4: prediction
    

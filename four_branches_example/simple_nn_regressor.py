@@ -13,9 +13,9 @@ def LSF(x1, x2):
 pf_values = []
 
 #np.random.seed(29)
-for i in range(25):
+for i in range(10):
     # Stage 1: Generation of Monte Carlo population
-    nMC = 2500
+    nMC = 500
     x1 = np.random.normal(0, 1, size=nMC)
     x2 = np.random.normal(0, 1, size=nMC)
     S = np.column_stack((x1, x2))

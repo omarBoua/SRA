@@ -24,7 +24,7 @@ def g(X):
 
 function_calls = 0
 nMC = 300000 # Number of instances to generate
-n = 40  # Number of parameters
+n = 50  # Number of parameters
 
 mu_lognormal = np.log(1/np.sqrt(0.2**2+1))
 
@@ -39,7 +39,7 @@ S = np.random.lognormal(mean= mu_lognormal , sigma=sigma_lognormal, size=(nMC, n
 
 
 # Stage 2: Definition of initial design of experiments (DoE)
-N1 = 50
+N1 = 100
 n_EDini = N1 
 
 mean_population = np.mean(S, axis=0)
@@ -71,7 +71,7 @@ scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
 kernel = C(1, (1e-3, 1e2)) * RBF(10, (1e-2, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=30) #30 for n= 40 was good
+kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=300) #30 for n= 40 was good
 
 kriging.fit(scaled_DoE, Pf_values)
 iter =0

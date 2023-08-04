@@ -14,15 +14,15 @@ warnings.filterwarnings("ignore")
 
  """
 def performance_function(x1, x2):
-    k = 6
-    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
+    k = 8.5
+    term1 = 4 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
+    term2 = 4 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
     term3 = (x1 - x2) + k / (2**0.5)
     term4 = (x2 - x1) + k / (2**0.5)
     
     return min(term1, term2, term3, term4)
 # Stage 1: Generation of Monte Carlo population
-nMC = 1000000
+nMC = 8000000
 x1 = np.random.normal(0,1,size = nMC)
 x2 = np.random.normal(0,1,size = nMC )
 S = np.column_stack((x1, x2))
@@ -34,13 +34,7 @@ function_calls = 0
 
 # Stage 2: Definition of initial design of experiments (DoE)
 N1 = 12
-#uncomment for random selection
-""" n_EDini = N1 
-selected_indices = np.random.choice(len(S), N1, replace=False)
 
-DoE = S[selected_indices] """
-
-#uncomment for importance sampling
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
 closest_sample_index = np.argmin(distances_to_mean)
@@ -65,7 +59,7 @@ scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 kernel = C(1.0) * RBF(1.0)
 kernel = C(1.0, (1e-3, 1e3)) * RBF([0.5,0.5], (1e-3, 1e3))  # Decreased lower bound from 1e-2 to 1e-3
-kriging = GaussianProcessRegressor()#kernel = kernel, n_restarts_optimizer=100)
+kriging = GaussianProcessRegressor(kernel = kernel, n_restarts_optimizer=100)
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
 function_calls_values = []

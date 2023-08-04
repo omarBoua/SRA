@@ -13,18 +13,7 @@ from sklearn.model_selection import cross_val_score
 #np.random.seed(29)
 
 warnings.filterwarnings("ignore")
-""" def calculate_u(sample, models):
-    bf = 0
-    bs = 0 
-    B = len(models)
-    for model in models:
-        
-        y_ann = model.predict(scaler.transform([sample]))
-        if y_ann <= 0:
-            bf += 1
-        else: 
-            bs += 1 
-    return np.abs(bf - bs) / B """  
+
 def calculate_u_vectorized(samples, models):
     B = len(models)
     predictions = np.zeros((B, samples.shape[0]))
@@ -73,7 +62,7 @@ n_clusters = 3
 n_add = 3 
 
 # Perform k-means clustering
-kmeans = KMeans(n_clusters=n_clusters, max_iter=5, random_state=0)
+kmeans = KMeans(n_clusters=n_clusters, max_iter=5)
 cluster_labels = kmeans.fit_predict(S)
 cluster_labels = kmeans.labels_
 
@@ -83,8 +72,8 @@ cluster_labels = kmeans.labels_
 
 
 #2. initial experimental design
-n_EDini = 12
-n_epochs = n_EDini
+n_EDini = 50
+n_epochs = 500
 """ # Step 1: Find the sample closest to the mean
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
@@ -120,6 +109,7 @@ scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
 #kernel = ConstantKernel(1.0) * RBF(1.0)
 
+scaled_S = scaler.transform(S)
 
  
 #3. train the B neural network
@@ -127,16 +117,17 @@ B = 50  #number of neural networks
 iter = 0 
 hidden_layers = np.append(np.repeat([2,3,4,5], 12),[5,5])
 
-last_five_iter_scores = np.zeros(5)
+
 models = [] 
 for j in hidden_layers:
-    hidden_layer_sizes = (j,j)
+    hidden_layer_sizes = (j,j,j)
     model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation='tanh', max_iter = n_epochs ,solver = 'lbfgs')
     models.append(model)
-    
+
 while(1):
     validation_errors = []
     pf_values = []
+    X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels)
     
     for model in models:
 
@@ -145,16 +136,14 @@ while(1):
 
         new_hidden_layer_size = hidden_layers[index_model]
 
-        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size)
+        params['hidden_layer_sizes'] = (new_hidden_layer_size,new_hidden_layer_size,new_hidden_layer_size)
 
         model.set_params(**params)
         model.set_params(max_iter = n_epochs)
-        X_train, X_test, y_train, y_test = train_test_split(scaled_DoE, labels)
         model.fit(X_train,y_train)
         y_test_pred = model.predict(X_test)
         validation_errors.append(mean_squared_error(y_test, y_test_pred ))
 
-        scaled_S = scaler.fit_transform(S)
         y_ann = model.predict(scaled_S)
         pf = np.sum(y_ann <= 0) / nMC
         pf_values.append(pf)
@@ -173,16 +162,18 @@ while(1):
     
    
     cov_pf_iter = np.std(pf_values) / pf_hat
-    cov_mcs = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
     print("cov", cov_pf_iter)
-    print("diff", pf_max - pf_min - np.std(pf_values))
+    max_min_diff =(pf_max - pf_min) / pf_hat
     print("maxmin: ", (pf_max - pf_min) / pf_hat)
-    if((pf_max - pf_min) / pf_hat < 0.05):
-        break
-    if(cov_pf_iter <= 0.05 and cov_mcs < 0.05 ):
-            print("cov_mcs: ", cov_mcs)
+   
+    conv_criterium = (cov_pf_iter + max_min_diff) * 0.5
+    print("conv_crit: ", conv_criterium)
+    if(max_min_diff <= 0.05  ):
+        print("ANN converged with probability of failure: ", pf_hat)
+        
+        print("The number of function calls needed for convergence: ", function_calls)
             
-            break
+        break
     
 
 
@@ -232,7 +223,6 @@ while(1):
         else:
 
             k = np.where(worst_model_indices == index)[0][0]  # Get the index of the current model
-            print("k", k)
             replacement_model_index = best_model_indices[k]  # Get the index of the k-th best model
             models[index] = models[replacement_model_index] 
 

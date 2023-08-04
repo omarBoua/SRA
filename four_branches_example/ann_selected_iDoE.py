@@ -84,7 +84,7 @@ cluster_labels = kmeans.labels_
 
 #2. initial experimental design
 n_EDini = 50
-n_epochs = n_EDini
+n_epochs = 100
 # Step 1: Find the sample closest to the mean
 mean_population = np.mean(S, axis=0)
 distances_to_mean = cdist([mean_population], S)
@@ -125,7 +125,7 @@ scaled_DoE = scaler.fit_transform(DoE)
 B = 50  #number of neural networks
 iter = 0 
 hidden_layers = np.append(np.repeat([2,3,4,5], 12),[5,5])
-
+hidden_layers = np.repeat([5], 50)
 last_five_iter_scores = np.zeros(5)
 models = [] 
 for j in hidden_layers:
@@ -174,13 +174,10 @@ while(1):
     cov_pf_iter = np.std(pf_values) / pf_hat
     cov_mcs = np.sqrt(1 - pf_hat) / (np.sqrt(pf_hat* nMC) )
     print("cov", cov_pf_iter)
-    
-    if((pf_max - pf_min) / pf_hat < 0.05):
+    print((pf_max - pf_min) / pf_hat)
+    if(cov_pf_iter < 0.05):
         break
-    if(cov_pf_iter <= 0.05  ):
-            print("cov_mcs: ", cov_mcs)
-            print("calls", function_calls)
-            break
+    
     
 
 
