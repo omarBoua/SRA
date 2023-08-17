@@ -1,11 +1,15 @@
-import numpy as np
+import numpy as np 
+from scipy.spatial.distance import cdist
+from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.gaussian_process import GaussianProcessRegressor
-import matplotlib.pyplot as plt
 import warnings
-from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-warnings.filterwarnings("ignore")
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
+
+warnings.filterwarnings("ignore")
 
 
 #Performance function with two inputs six input parameters. Set k to 1.5 for lower probability
@@ -15,10 +19,27 @@ def performance_function(c1, c2, m, r, t1, F1):
     global function_calls 
     function_calls += 1
     return k * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
+def min_distances_from_doe_vectorized(S, D):
+    # Convert S and D into numpy arrays
+    S_np = np.array(S)
+    D_np = np.array(D)
+    
+    # Expand dimensions to broadcast the subtraction operation
+    diffs = S_np[:, np.newaxis] - D_np
+    
+    # Calculate squared distances
+    squared_distances = np.sum(diffs**2, axis=-1)
+    
+    # Find the minimal squared distance along the last dimension
+    min_squared_distances = np.min(squared_distances, axis=-1)
+    
+    # Return the square root to get the Euclidean distances
+    return np.sqrt(min_squared_distances)
 
+alpha = 0.75
 function_calls = 0
 
-nMC = 700000   #for lower probabilities, set it to at least 1000000
+nMC = 70000   #for lower probabilities, set it to at least 1000000
 m = np.random.normal(1, 0.05, size=nMC)
 c1 = np.random.normal(1, 0.1, size=nMC)
 c2 = np.random.normal(0.1, 0.01, size=nMC)
@@ -29,13 +50,8 @@ S = np.column_stack((c1, c2, m, r, t1, F1))
 
 #2. create the initial design of experimental 
 n_EDini = 12
-m_doe = np.random.normal(1, 0.05, size=n_EDini)
-c1_doe = np.random.normal(1, 0.1, size=n_EDini)
-c2_doe = np.random.normal(0.1, 0.01, size=n_EDini)
-r_doe = np.random.normal(0.5, 0.05, size=n_EDini)
-F1_doe = np.random.normal(1, 0.2, size=n_EDini)
-t1_doe = np.random.normal(1, 0.2, size=n_EDini) 
-DoE = np.column_stack((c1_doe, c2_doe, m_doe, r_doe, t1_doe, F1_doe))
+selected_indices = np.random.choice(len(S), n_EDini, replace=False)
+DoE = np.array(S[selected_indices])
 
 labels = np.zeros(n_EDini) 
 for i in range(n_EDini):
@@ -43,9 +59,7 @@ for i in range(n_EDini):
     labels[i] = np.tanh(labels[i]) #smoothing the labels 
 
 
-
 scaler = StandardScaler()
-
 scaled_DoE = scaler.fit_transform(DoE)
 
 
@@ -54,16 +68,14 @@ scaled_DoE = scaler.fit_transform(DoE)
 # Create a k-fold cross validator
 n_splits = 5
 
-scaled_S = scaler.fit_transform(S)
+scaled_S = scaler.transform(S)
 
 models = []
-kernel = C(1.0, (1e-3, 1e3)) * RBF(np.repeat([0.5], 6), (1e-3, 1e3))  # Decreased lower bound from 1e-2 to 1e-3
-
 for _ in range(n_splits):
-    model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=100)
+    model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
     models.append(model)
 
-base_model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=100)
+base_model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
 iter = 0
 kf = KFold(n_splits=n_splits  )
 
@@ -75,7 +87,7 @@ while True :
     pseudo_values = [[] for _ in range(n_splits)]
 
     base_model.fit(scaled_DoE,labels)
-    prediction_base_model,variance = base_model.predict(scaled_S,return_std=True)  
+    prediction_base_model = base_model.predict(scaled_S)  
     pf_base_model =   np.sum(prediction_base_model >= 0) / nMC
     # Loop through each fold
     for i, (train_index, test_index) in enumerate(kf.split(scaled_DoE)):
@@ -97,7 +109,9 @@ while True :
     average_pseudo_value = np.sum(pseudo_values, axis= 0)/n_splits
 
     sigma =  np.sum(np.square(pseudo_values - average_pseudo_value), axis = 0) / (n_splits *(n_splits -1))  
-    learning_values = np.abs(prediction_base_model) / sigma
+    d_min = min_distances_from_doe_vectorized(S,DoE)
+
+    learning_values = np.abs(prediction_base_model) / ((alpha * sigma/np.max(sigma)) + ((1-alpha) * d_min / np.max(d_min)))
 
     best_point_index = np.argmin(learning_values)
     x_best_point = S[best_point_index]
@@ -113,7 +127,6 @@ while True :
     stopping_criterion = delta_pf / pf_base_model
     conv_threshold = 0.02
     if(stopping_criterion <= conv_threshold):
-        print("here")
         cov_pf = np.sqrt(1 - pf_base_model) / (np.sqrt(pf_base_model* nMC) )
         if (cov_pf <= conv_threshold):
             # Coefficient of variation is acceptable, stop AK-MCS

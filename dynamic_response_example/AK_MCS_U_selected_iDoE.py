@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 #Performance function, set k = 1.5 for lower probability
 def g(c1, c2, m, r, t1, F1):
     w0 = np.sqrt((c1 * c2)/m)
-    k = 1.5
+    k = 3
     return k * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
 
 # Stage 1: Generation of Monte Carlo population

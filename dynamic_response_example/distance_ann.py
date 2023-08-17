@@ -19,10 +19,27 @@ def performance_function(c1, c2, m, r, t1, F1):
     global function_calls 
     function_calls += 1
     return k * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
+def min_distances_from_doe_vectorized(S, D):
+    # Convert S and D into numpy arrays
+    S_np = np.array(S)
+    D_np = np.array(D)
+    
+    # Expand dimensions to broadcast the subtraction operation
+    diffs = S_np[:, np.newaxis] - D_np
+    
+    # Calculate squared distances
+    squared_distances = np.sum(diffs**2, axis=-1)
+    
+    # Find the minimal squared distance along the last dimension
+    min_squared_distances = np.min(squared_distances, axis=-1)
+    
+    # Return the square root to get the Euclidean distances
+    return np.sqrt(min_squared_distances)
+
 
 function_calls = 0
 
-nMC = 700000   #for lower probabilities, set it to at least 1000000
+nMC = 70000   #for lower probabilities, set it to at least 1000000
 m = np.random.normal(1, 0.05, size=nMC)
 c1 = np.random.normal(1, 0.1, size=nMC)
 c2 = np.random.normal(0.1, 0.01, size=nMC)
@@ -33,13 +50,8 @@ S = np.column_stack((c1, c2, m, r, t1, F1))
 
 #2. create the initial design of experimental 
 n_EDini = 12
-m_doe = np.random.normal(1, 0.05, size=n_EDini)
-c1_doe = np.random.normal(1, 0.1, size=n_EDini)
-c2_doe = np.random.normal(0.1, 0.01, size=n_EDini)
-r_doe = np.random.normal(0.5, 0.05, size=n_EDini)
-F1_doe = np.random.normal(1, 0.2, size=n_EDini)
-t1_doe = np.random.normal(1, 0.2, size=n_EDini) 
-DoE = np.column_stack((c1_doe, c2_doe, m_doe, r_doe, t1_doe, F1_doe))
+selected_indices = np.random.choice(len(S), n_EDini, replace=False)
+DoE = np.array(S[selected_indices])
 
 labels = np.zeros(n_EDini) 
 for i in range(n_EDini):
@@ -72,7 +84,6 @@ while True :
 
     predictions =  [[] for _ in range(n_splits)]
     pf_values = []
-    pseudo_values = [[] for _ in range(n_splits)]
 
     base_model.fit(scaled_DoE,labels)
     prediction_base_model = base_model.predict(scaled_S)  
@@ -91,13 +102,10 @@ while True :
         pf = np.sum(predictions[i]  >= 0) / nMC
         pf_values.append(pf)
 
-        pseudo_value_i = n_splits * prediction_base_model - (n_splits - 1) * predictions[i]
-        pseudo_values[i]= pseudo_value_i
     print(pf_values)
-    average_pseudo_value = np.sum(pseudo_values, axis= 0)/n_splits
+    d_min = min_distances_from_doe_vectorized(S,DoE)
 
-    sigma =  np.sum(np.square(pseudo_values - average_pseudo_value), axis = 0) / (n_splits *(n_splits -1))  
-    learning_values = np.abs(prediction_base_model) / sigma
+    learning_values = np.abs(prediction_base_model) / d_min
 
     best_point_index = np.argmin(learning_values)
     x_best_point = S[best_point_index]

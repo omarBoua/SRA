@@ -36,7 +36,7 @@ for i in range(N1):
 # Stage 3: Computation of Kriging model
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
-kernel = C(1.0, (1e-3, 1e3)) * RBF(np.repeat([1], 6), (1e-3, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
+kernel = C(1.0, (1e-3, 1e3)) * RBF(np.repeat([0.5], 6), (1e-3, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
 kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=30)
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
@@ -47,7 +47,7 @@ while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
     G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
-    Pf_hat = np.sum(G_hat > 0) / nMC
+    Pf_hat = np.sum(G_hat >= 0) / nMC
     
     # Stage 5: Identification of the best next point to evaluate
     learning_values = np.abs(G_hat) / kriging_std

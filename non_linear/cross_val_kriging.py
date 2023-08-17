@@ -7,21 +7,17 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 warnings.filterwarnings("ignore")
 from sklearn.model_selection import KFold
 
-
+import math
 
 #Performance function with two inputs six input parameters. Set k to 1.5 for lower probability
-def performance_function( x1, x2):
-        k = 6
-        term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-        term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
-        term3 = (x1 - x2) + k / (2**0.5)
-        term4 = (x2 - x1) + k / (2**0.5)
-        global function_calls
-        function_calls += 1
-        return min(term1, term2, term3, term4)
+def performance_function(x1,x2):
+    global function_calls 
+    function_calls += 1
+    return 10 - (x1**2 - 5 * math.cos(2*math.pi*x1)) - x2**2 - 5 * math.cos(2* math.pi * x2)
+
 function_calls = 0
 
-nMC = 1000000
+nMC = 1000
 x1 = np.random.normal(0, 1, size=nMC)
 x2 = np.random.normal(0, 1, size=nMC)
 S = np.column_stack((x1, x2))
@@ -30,9 +26,8 @@ S = np.column_stack((x1, x2))
 #2. create the initial design of experimental 
 n_EDini = 12
 selected_indices = np.random.choice(len(S), n_EDini, replace=False)
-x1_doe = np.random.normal(0,1, size = n_EDini)
-x2_doe = np.random.normal(0,1, size = n_EDini)
-DoE = np.column_stack((x1_doe, x2_doe))
+
+DoE = np.array(S[selected_indices])
 
 initial_design = np.array(DoE)
 labels = np.zeros(n_EDini) 
@@ -57,10 +52,10 @@ models = []
 kernel = C(1.0, (1e-3, 1e3)) * RBF([0.5,0.5], (1e-3, 1e3))  # Decreased lower bound from 1e-2 to 1e-3
 
 for _ in range(n_splits):
-    model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=100)
+    model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=40)
     models.append(model)
 
-base_model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=100)
+base_model = GaussianProcessRegressor(kernel= kernel , n_restarts_optimizer=40)
 iter = 0
 kf = KFold(n_splits=n_splits  )
 
