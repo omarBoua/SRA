@@ -1,68 +1,155 @@
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.gaussian_process import GaussianProcessRegressor
-import matplotlib.pyplot as plt
+import numpy as np 
 from scipy.spatial.distance import cdist
-from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import StandardScaler
 import warnings
-from scipy.stats import norm
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold
+
 warnings.filterwarnings("ignore")
 
 
-l = .50
-
-
-
-def g(x1,x2):
+#Performance function with two inputs six input parameters. Set k to 1.5 for lower probability
+def performance_function(x1,x2):
+    global function_calls 
+    function_calls += 1
+    return 0.5 * (x1-2)**2 - 1.5 *(x2-5)**3 - 3
+def min_distances_from_doe_vectorized(S, D):
+    # Convert S and D into numpy arrays
+    S_np = np.array(S)
+    D_np = np.array(D)
     
-    return 0.5 * (x1-2)**2 - 1.5 *(x2-5)**3 - 3 - (1-l) * 209.22541271
-
-
-# Stage 1: Generation of Monte Carlo population
-nMC = 700000   #for lower probabilities, set it to at least 1000000
-x1 = np.random.normal(0, 1, size=nMC)
-x2 = np.random.normal(0, 1, size=nMC)
-
-S = np.column_stack((x1,x2))
-
-
-G = np.zeros(nMC)  # Array to store performance function evaluations
-for i in range(nMC):
-    G[i] = g(S[i, 0], S[i, 1]) 
+    # Expand dimensions to broadcast the subtraction operation
+    diffs = S_np[:, np.newaxis] - D_np
     
-print("mean" , np.mean(G))
+    # Calculate squared distances
+    squared_distances = np.sum(diffs**2, axis=-1)
+    
+    # Find the minimal squared distance along the last dimension
+    min_squared_distances = np.min(squared_distances, axis=-1)
+    
+    # Return the square root to get the Euclidean distances
+    return np.sqrt(min_squared_distances)
 
-p_l = np.sum(G <= 0)/ nMC
+calls = []
+out = []
+for _ in range(5):
+  function_calls = 0
+
+  nMC = 1000000
+  x1 = np.random.normal(0, 1, size=nMC)
+  x2 = np.random.normal(0, 1, size=nMC)
+  S = np.column_stack((x1, x2))
+
+
+  #2. create the initial design of experimental 
+  n_EDini = 12
+  selected_indices = np.random.choice(len(S), n_EDini, replace=False)
+
+  DoE = np.array(S[selected_indices])
+
+  initial_design = np.array(DoE)
+  labels = np.zeros(n_EDini) 
+  for i in range(n_EDini):
+      labels[i] = performance_function(initial_design[i, 0], 
+                    initial_design[i,1])  # Evaluate performance function
+      labels[i] = np.tanh(labels[i]) #smoothing the labels 
+
+
+  scaler = StandardScaler()
+  DoE = initial_design
+  scaled_DoE = scaler.fit_transform(DoE)
 
 
 
-from scipy.optimize import minimize
 
-def func_to_minimize(params):
-    a, b, c, q = params
-    return (np.log(p_l) - np.log(q) + a * (l - b)**c)**2
+  # Create a k-fold cross validator
+  n_splits = 5
 
-initial_params = [0, 0.2, 0, 2] # Provide sensible initial guesses
-result = minimize(func_to_minimize, initial_params, method='Newton-CG')
+  scaled_S = scaler.fit_transform(S)
 
-a, b, c, q = result.x
-import matplotlib.pyplot as plt
+  models = []
+  for _ in range(n_splits):
+      model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
+      models.append(model)
 
-print(a,b,c,q)
-print(p_l)
-print(q * np.exp(-a * (1-b)**c))
+  base_model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
+  iter = 0
+  kf = KFold(n_splits=n_splits  )
 
-# Define a range of x values
-x = np.linspace(0, 1, 100)  # generates 1000 points evenly spaced between 0 and 10
-# Define the function
-y = q * np.exp(-a * (x - b)**c)
+  i=0
+  while True :
 
-# Plot the function
-plt.figure(figsize=(8, 6))
-plt.plot(x, y)
-plt.title('Plot of the function q * np.exp(-a * (x - b)**c)')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.grid(True)
-plt.show()
+      predictions =  [[] for _ in range(n_splits)]
+      pf_values = []
 
+      base_model.fit(scaled_DoE,labels)
+      prediction_base_model = base_model.predict(scaled_S)  
+      pf_base_model =   np.sum(prediction_base_model <= 0) / nMC
+      # Loop through each fold
+      for i, (train_index, test_index) in enumerate(kf.split(scaled_DoE)):
+          X_train, X_test = scaled_DoE[train_index], scaled_DoE[test_index]
+        
+          y_train, y_test = labels[train_index], labels[test_index]
+
+          # The ith model will be trained on training set where the ith fold is not used for training
+          
+
+          models[i].fit(X_train,y_train)
+          predictions[i] = models[i].predict(scaled_S)
+          pf = np.sum(predictions[i]  <= 0) / nMC
+          pf_values.append(pf)
+
+      print(pf_values)
+      d_min = min_distances_from_doe_vectorized(S,DoE)
+      learning_values = np.abs(prediction_base_model) / d_min
+
+      best_point_index = np.argmin(learning_values)
+      x_best_point = S[best_point_index]
+      
+
+      label_best_point = np.tanh(performance_function(x_best_point[0], x_best_point[1]))
+      labels = np.concatenate((labels, [label_best_point]))
+      DoE = np.vstack((DoE, x_best_point))
+      scaled_DoE = scaler.transform(DoE)
+
+
+      delta_pf = np.max(np.abs(pf_base_model - pf_values))
+      stopping_criterion = delta_pf / pf_base_model
+      conv_threshold = 0.02
+      if(stopping_criterion <= conv_threshold):
+          cov_pf = np.sqrt(1 - pf_base_model) / (np.sqrt(pf_base_model* nMC) )
+          if (cov_pf <= 0.1):
+              # Coefficient of variation is acceptable, stop AK-MCS
+              print("New ANN finished. Probability of failure: {:.2e}".format(pf_base_model))
+              print("Coefficient of variation: {:.2%}".format(cov_pf))
+              print("Number of calls to the performance function", function_calls)
+              out.append(pf_base_model)
+              calls.append(function_calls)
+              break
+          else: 
+              new_x1 = np.random.normal(0, 1, size=nMC)
+              new_x2 = np.random.normal(0, 1, size=nMC)
+              new_points = np.column_stack((new_x1, new_x2)) 
+
+              S = np.vstack((S, new_points))
+              scaled_S = scaler.transform(S)
+              nMC = len(S)
+
+
+      else: 
+          print("pf", pf_base_model)
+          print("stop" , stopping_criterion)
+          iter += 1
+
+      
+
+
+
+print(np.mean(calls))
+print(np.std(out)/np.mean(out))
+print(np.mean(out))
+    

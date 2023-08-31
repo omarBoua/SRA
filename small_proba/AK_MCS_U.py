@@ -84,7 +84,7 @@ while True:
         # Stopping condition met, learning is stopped
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         
-        cov_threshold = 0.05
+        cov_threshold = 0.1
         if cov_pf < cov_threshold:
             # Coefficient of variation is acceptable, stop AK-MCS
             print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
