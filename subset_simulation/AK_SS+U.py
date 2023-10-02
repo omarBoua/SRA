@@ -9,9 +9,13 @@ import math
 warnings.filterwarnings("ignore")
 
 def gcal1(X,mu,sdev): #lower probability example
+    global function_calls 
+    function_calls += 1
     return 0.5 * (X[0]-2)**2 - 1.5 *(X[1]-5)**3 - 3 
 
 def gcal2(X,mu,sdev):   #four branches example
+    global function_calls 
+    function_calls += 1
     k = 6
     term1 = 3 + 0.1 * (X[0] - X[1])**2 - (X[0] + X[1])/(np.sqrt(2))
     term2 = 3 + 0.1 * (X[0] - X[1])**2 + (X[0] + X[1])/(np.sqrt(2))
@@ -20,6 +24,8 @@ def gcal2(X,mu,sdev):   #four branches example
     return min(term1, term2, term3, term4) 
 
 def gcal3(X,mu,sdev): #dynamic response example
+    global function_calls 
+    function_calls += 1
     X = mu + sdev * X
     w0 = np.sqrt((X[0] * X[1])/X[2])
     k = 3
@@ -51,8 +57,7 @@ DoE = S[selected_indices]
 
 Pf_values = np.zeros(N1)  # Array to store performance function evaluations
 for i in range(N1):
-    Pf_values[i] = gcal2(DoE[i],mu ,sdev)  # Evaluate performance function
-    function_calls += 1
+    Pf_values[i] = gcal1(DoE[i],mu ,sdev)  # Evaluate performance function
 
 
 # Stage 3: Computation of Kriging model
@@ -86,7 +91,7 @@ while True:
         # Stopping condition met, learning is stopped
 
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-        cov_threshold = 0.05
+        cov_threshold = 0.1
         if cov_ss < cov_threshold:
            
             # Coefficient of variation is acceptable, stop AK-MCS
@@ -101,7 +106,7 @@ while True:
             print("gamma", gamma)
             print("m", m)
             
-            Nlevel = math.ceil((np.abs(np.log(Pf_hat))**r * (1 + gamma) * (1-p_0)/ (p_0 * np.abs(np.log(p_0))**r * cov_threshold**2)) / m)
+            Nlevel = 2*Nlevel#math.ceil((np.abs(np.log(Pf_hat))**r * (1 + gamma) * (1-p_0)/ (p_0 * np.abs(np.log(p_0))**r * cov_threshold**2)) / m)
             print("nlevel", Nlevel)
             # Coefficient of variation is too high, update population
             
@@ -109,8 +114,7 @@ while True:
             # Go back to Stage 4
     else:
         # Stopping condition not met, update design of experiments
-        x_best_performance = gcal2(x_best,mu,sdev)
-        function_calls += 1
+        x_best_performance = gcal1(x_best,mu,sdev)
         Pf_values = np.concatenate((Pf_values, [x_best_performance]))
         DoE = np.vstack((DoE, x_best))
         kriging.fit(DoE, Pf_values)
@@ -120,3 +124,19 @@ while True:
     pf_hat_values.append(Pf_hat)
     print("iter ",iter, ": ",Pf_hat)
 
+# Plotting pf_hat values vs. function_calls
+plt.plot(function_calls_values, pf_hat_values, 'b-')
+plt.xlabel('Function calls')
+plt.ylabel('Probability of failure')
+
+last_point_calls = function_calls_values[-1]
+last_point_pf_hat = pf_hat_values[-1]
+plt.plot(last_point_calls, last_point_pf_hat, 'ro')
+
+
+# Display the number of iterations
+plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
+         verticalalignment='top', horizontalalignment='right',
+         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
+plt.show()  

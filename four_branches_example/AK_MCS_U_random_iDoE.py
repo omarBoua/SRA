@@ -108,7 +108,7 @@ while True:
     pf_hat_values.append(Pf_hat)
     print("iter ",iter, ": ",Pf_hat)
 
-""" 
+
 
 x1_vals = np.linspace(-6, 6, 1000)
 x2_vals = np.linspace(-6, 6, 1000)
@@ -122,7 +122,6 @@ Z = Z.reshape(X1.shape)
 plt.contour(X1, X2, Z, levels=[0], colors='black')
 plt.xlabel('x1')
 plt.ylabel('x2')
-plt.title('LSF Contour')
 
 # Plotting the initial points in the design of experiment
 plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
@@ -140,7 +139,7 @@ legend_elements = [
 
 plt.legend(handles=legend_elements)
 
-plt.show() """
+plt.show() 
 
 """ 
 # Plotting pf_hat values vs. function_calls

@@ -172,3 +172,35 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
 plt.show() 
+
+
+x1_vals = np.linspace(-6, 6, 1000)
+x2_vals = np.linspace(-6, 6, 1000)
+X1, X2 = np.meshgrid(x1_vals, x2_vals)
+
+# Calculate LSF values for each combination of x1 and x2
+Z = np.array([performance_function(x1, x2) for x1, x2 in zip(X1.flatten(), X2.flatten())])
+Z = Z.reshape(X1.shape)
+
+# Plotting the contour of LSF
+plt.contour(X1, X2, Z, levels=[0], colors='black')
+plt.xlabel('x1')
+plt.ylabel('x2')
+
+# Plotting the initial points in the design of experiment
+plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
+
+# Plotting the added points in the final design of experiment
+plt.scatter(DoE[N1:, 0], DoE[N1:, 1], c='red',s=5, label='Added Points', marker = 'o')
+
+
+legend_elements = [
+    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
+    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
+    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
+]
+
+
+plt.legend(handles=legend_elements)
+
+plt.show() 

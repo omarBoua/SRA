@@ -113,10 +113,10 @@ while True:
     pf_hat_values.append(Pf_hat)
     print("iter ",iter, ": ",Pf_hat)
 
-""" 
+
 
 x1_vals = np.linspace(-6, 6, 1000)
-x2_vals = np.linspace(-6, 6, 1000)
+x2_vals = np.linspace(-2, 8, 1000)
 X1, X2 = np.meshgrid(x1_vals, x2_vals)
 
 # Calculate LSF values for each combination of x1 and x2
@@ -127,13 +127,12 @@ Z = Z.reshape(X1.shape)
 plt.contour(X1, X2, Z, levels=[0], colors='black')
 plt.xlabel('x1')
 plt.ylabel('x2')
-plt.title('LSF Contour')
 
 # Plotting the initial points in the design of experiment
 plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
 
 # Plotting the added points in the final design of experiment
-plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
+plt.scatter(DoE[N1:, 0], DoE[N1:, 1], c='red',s=5, label='Added Points', marker = 'o')
 
 
 legend_elements = [
@@ -145,9 +144,9 @@ legend_elements = [
 
 plt.legend(handles=legend_elements)
 
-plt.show() """
+plt.show() 
 
-
+"""
 # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'b-')
 plt.xlabel('function_calls')
@@ -169,4 +168,4 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
-plt.show() 
+plt.show() """

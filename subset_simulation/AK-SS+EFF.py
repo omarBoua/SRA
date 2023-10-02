@@ -1,22 +1,38 @@
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
+from scipy.spatial.distance import cdist
 import warnings
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+import SS_surrogate as ss
+import math
 from scipy.stats import norm
-import matplotlib
-matplotlib.use("pgf")
-matplotlib.rcParams.update({
-    "pgf.texsystem": "pdflatex",
-    'font.family': 'serif',
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-})
+
 warnings.filterwarnings("ignore")
 
+def gcal1(X,mu,sdev): #lower probability example
+    global function_calls
+    function_calls +=1
+    return 0.5 * (X[0]-2)**2 - 1.5 *(X[1]-5)**3 - 3 
 
-#Expected feasibility function 
+def gcal2(X,mu,sdev):   #four branches example
+    global function_calls 
+    function_calls += 1
+    k = 6
+    term1 = 3 + 0.1 * (X[0] - X[1])**2 - (X[0] + X[1])/(np.sqrt(2))
+    term2 = 3 + 0.1 * (X[0] - X[1])**2 + (X[0] + X[1])/(np.sqrt(2))
+    term3 = (X[0] - X[1]) + k / (2**0.5)
+    term4 = (X[1] - X[0]) + k / (2**0.5)
+    return min(term1, term2, term3, term4) 
+
+def gcal3(X,mu,sdev): #dynamic response example
+    global function_calls 
+    function_calls += 1
+    X = mu + sdev * X
+    w0 = np.sqrt((X[0] * X[1])/X[2])
+    k = 3
+    temp = k * X[3] - np.abs(2 * X[5] * np.sin(w0*X[4]/2)/ (X[2]*w0**2))
+    return -temp
 def eff(g_hat_values, sigma_g_values):
     a = 0
     epsilon = 2 * np.square(sigma_g_values)
@@ -26,54 +42,49 @@ def eff(g_hat_values, sigma_g_values):
     eff_values = term1 + term2 + term3
     return eff_values
 
-#Performance function: set k to 1.5 for lower probability
-def g(c1, c2, m, r, t1, F1):
-    w0 = np.sqrt((c1 * c2)/m)
-    k = 3 
-    return k * r - np.abs(2 * F1 * np.sin(w0*t1/2)/ (m*w0**2))
-
-
 
 # Stage 1: Generation of Monte Carlo population
-nMC = 700000   #for lower probabilities, set it to at least 1000000
-m = np.random.normal(1, 0.05, size=nMC)
-c1 = np.random.normal(1, 0.1, size=nMC)
-c2 = np.random.normal(0.1, 0.01, size=nMC)
-r = np.random.normal(0.5, 0.05, size=nMC)
-F1 = np.random.normal(1, 0.2, size=nMC)
-t1 = np.random.normal(1, 0.2, size=nMC) 
-S = np.column_stack((c1, c2, m, r, t1, F1))
+nMC = 70000
+dim = 2
+S= np.random.normal(0,1,size = (nMC,dim))
+mu = np.array([1,0.1,1,0.5,1,1])  # mean of rvs
+sdev = np.array([.1,.01,.05,.05,.2,.2])  # sdev of rvs
+function_calls = 0
 
-function_calls = 0 # number of calls to the performance function
+
+
+
 
 # Stage 2: Definition of initial design of experiments (DoE)
 N1 = 12
+
+n_EDini = N1 
 selected_indices = np.random.choice(len(S), N1, replace=False)
-DoE = S[selected_indices] 
+
+DoE = S[selected_indices]
+
+
 Pf_values = np.zeros(N1)  # Array to store performance function evaluations
 for i in range(N1):
-    Pf_values[i] = g(DoE[i, 0], DoE[i, 1],DoE[i,2], DoE[i,3], DoE[i,4], DoE[i,5])  # Evaluate performance function
-    function_calls += 1
+    Pf_values[i] = gcal1(DoE[i],mu ,sdev)  # Evaluate performance function
 
 
 # Stage 3: Computation of Kriging model
-scaler = MinMaxScaler()
-scaled_DoE = scaler.fit_transform(DoE)  #scaling the data
-
-kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-3, 1e2))   
-kriging = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=90) 
-kriging.fit(scaled_DoE, Pf_values)
-
+kernel = C(1.0, (1e-3, 1e3)) * RBF(np.repeat([0.5], dim), (1e-3, 1e2))  # Decreased lower bound from 1e-2 to 1e-3
+kriging = GaussianProcessRegressor()
+kriging.fit(DoE, Pf_values)
 iter =0
 function_calls_values = []
 pf_hat_values = []
-
-#start iterative process
+Nlevel = 500
+p_0 = 0.1
 while True:
     # Stage 4: Prediction by Kriging and estimation of probability of failure
     nMC = len(S)
-    G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
-    Pf_hat = np.sum(G_hat > 0) / nMC
+    G_hat, kriging_std = kriging.predict(S,return_std=True)
+    
+    #estimate probability of failure using subset simulation
+    Pf_hat,cov_ss,gamma = ss.SS(kriging,dim=dim, Nlevel= Nlevel)
     
     # Stage 5: Identification of the best next point to evaluate
     learning_values = eff(G_hat, kriging_std)
@@ -82,60 +93,60 @@ while True:
     # Stage 6: Stopping condition on learning
     stopping_condition = max(learning_values) <= 0.001  
    
-
+ 
+    print(max(learning_values))
+    function_calls_values.append(function_calls)
+    pf_hat_values.append(Pf_hat)
     # Stage 7: Update of the previous design of experiments with the best point
     if stopping_condition:
         # Stopping condition met, learning is stopped
+
         cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
         cov_threshold = 0.05
-        if cov_pf < cov_threshold:
+        if cov_ss < 0.1:
+           
             # Coefficient of variation is acceptable, stop AK-MCS
-            print("AK-MCS finished. Probability of failure: {:.2e}".format(Pf_hat))
-            print("Coefficient of variation: {:.2%}".format(cov_pf))
+            print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
+            print("Coefficient of variation: {:.4%}".format(cov_ss))
             print("Number of calls to the performance function", function_calls)
             break
             # Stage 10: End of AK-MCS
         else:
+            r = 3
+            m = np.log(Pf_hat)/np.log(p_0)
+            print("gamma", gamma)
+            print("m", m)
+            
+            Nlevel = 2 * Nlevel#math.ceil((np.abs(np.log(Pf_hat))**r * (1 + gamma) * (1-p_0)/ (p_0 * np.abs(np.log(p_0))**r * cov_threshold**2)) / m)
+            print("nlevel", Nlevel)
             # Coefficient of variation is too high, update population
-            new_m = np.random.normal(1, 0.05, size=nMC)
-            new_c1 = np.random.normal(1, 0.1, size=nMC)
-            new_c2 = np.random.normal(0.1, 0.01, size=nMC)
-            new_r = np.random.normal(0.5, 0.05, size=nMC)
-            new_F1 = np.random.normal(1, 0.2, size=nMC)
-            new_t1 = np.random.normal(1, 0.2, size=nMC) 
-            new_points = np.column_stack((new_c1, new_c2, new_m, new_r, new_t1, new_F1)) 
-            S = np.vstack((S, new_points))
+            
+         
             # Go back to Stage 4
     else:
         # Stopping condition not met, update design of experiments
-        x_best_performance = g(x_best[0], x_best[1],x_best[2], x_best[3], x_best[4], x_best[5])
-        function_calls += 1
+        x_best_performance = gcal1(x_best,mu,sdev)
         Pf_values = np.concatenate((Pf_values, [x_best_performance]))
         DoE = np.vstack((DoE, x_best))
-        scaled_DoE = scaler.transform(DoE)
-        kriging.fit(scaled_DoE, Pf_values)
+        kriging.fit(DoE, Pf_values)
         # Go back to Stage 4
     iter += 1
-    function_calls_values.append(function_calls)
-    pf_hat_values.append(Pf_hat)
-    print("iter ",iter, ": Probability of failure estimate is ",Pf_hat)
-
+    
+    print("iter ",iter, ": ",Pf_hat)
 
 # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'b-')
-plt.xlabel('function_calls')
-plt.ylabel('pf_hat')
-plt.title('Convergence Plot')
+plt.xlabel('Function calls')
+plt.ylabel('Probability of failure')
 
-
-# Indicate the last point
 last_point_calls = function_calls_values[-1]
 last_point_pf_hat = pf_hat_values[-1]
 plt.plot(last_point_calls, last_point_pf_hat, 'ro')
+
 
 # Display the number of iterations
 plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-plt.show()
-plt.savefig('ex2_akmcs_eff.pgf')
+
+plt.show()  

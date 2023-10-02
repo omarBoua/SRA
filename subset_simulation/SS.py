@@ -4,11 +4,15 @@ from scipy.stats import norm
 import numpy as np
 
 def gcal1(X,mu,sdev):
+    global function_calls
+    function_calls += 1
    
     return 0.5 * (X[0]-2)**2 - 1.5 * (X[1]-5)**3 -3
 
 
 def gcal2(X,mu,sdev):
+    global function_calls
+    function_calls += 1
     k = 6
     term1 = 3 + 0.1 * (X[0] - X[1])**2 - (X[0] + X[1])/(np.sqrt(2))
     term2 = 3 + 0.1 * (X[0] - X[1])**2 + (X[0] + X[1])/(np.sqrt(2))
@@ -17,6 +21,8 @@ def gcal2(X,mu,sdev):
     return min(term1, term2, term3, term4)
 
 def gcal3(X,mu,sdev):
+    global function_calls
+    function_calls += 1
     X = mu + sdev * X
     w0 = np.sqrt((X[0] * X[1])/X[2])
     k = 3
@@ -68,16 +74,17 @@ def mcmc_algo(A, b, dim, lenchn, mu, sdev):
 
 
 
-
+function_calls = 0
 def SS():
+    
     np.random.seed()  # Equivalent of MATLAB's rng('shuffle')
 
-    dim = 6
+    dim = 2
     mu = np.array([1,0.1,1,0.5,1,1])  # mean of rvs
     sdev = np.array([.1,.01,.05,.05,.2,.2])  # sdev of rvs
 
-    Nsim = 10
-    Nlevel = 1000
+    Nsim = 100
+    Nlevel = 2000
     p0 = 0.1
 
     nt = np.zeros(Nsim)
@@ -154,6 +161,7 @@ def SS():
     print("Mean PF:", mean_pf)
     print("COV Average:", cov_avg)
     print("COV Estimated:", cov_estimated)
+    print("Ncalls: ", function_calls/Nsim)
     return mean_pf, cov_estimated
 
 SS()

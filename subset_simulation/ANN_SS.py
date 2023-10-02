@@ -68,7 +68,7 @@ while True :
 
     base_model.fit(DoE,labels)
     prediction_base_model = base_model.predict(S)  
-    pf_base_model =   np.sum(prediction_base_model <= 0) / nMC
+    pf_base_model,_,_ =   ss.SS(base_model,dim,500)
     # Loop through each fold
     for i, (train_index, test_index) in enumerate(kf.split(DoE)):
         X_train, X_test = DoE[train_index], DoE[test_index]
@@ -80,7 +80,7 @@ while True :
 
         models[i].fit(X_train,y_train)
         predictions[i] = models[i].predict(S)
-        pf,cov_ss = ss.SS(base_model,dim)
+        pf,cov_ss,_ = ss.SS(models[i],dim,500)
         pf_values.append(pf)
 
         pseudo_value_i = n_splits * prediction_base_model - (n_splits - 1) * predictions[i]

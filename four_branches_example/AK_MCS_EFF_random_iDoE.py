@@ -64,7 +64,6 @@ for i in range(N1):
 # Stage 3: Computation of Kriging model
 scaler = StandardScaler()
 scaled_DoE = scaler.fit_transform(DoE)
-#kernel = ConstantKernel(1.0) * RBF(1.0)
 kriging = GaussianProcessRegressor()
 kriging.fit(scaled_DoE, Pf_values)
 iter =0
@@ -117,8 +116,8 @@ while True:
     pf_hat_values.append(Pf_hat)
     print("iter ",iter, ": ",Pf_hat)
 
-""" 
 
+"""
 x1_vals = np.linspace(-6, 6, 1000)
 x2_vals = np.linspace(-6, 6, 1000)
 X1, X2 = np.meshgrid(x1_vals, x2_vals)
@@ -131,7 +130,6 @@ Z = Z.reshape(X1.shape)
 plt.contour(X1, X2, Z, levels=[0], colors='black')
 plt.xlabel('x1')
 plt.ylabel('x2')
-plt.title('LSF Contour')
 
 # Plotting the initial points in the design of experiment
 plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
@@ -151,7 +149,8 @@ plt.legend(handles=legend_elements)
 
 plt.show() """
 
-""" 
+
+
 # Plotting pf_hat values vs. function_calls
 plt.plot(function_calls_values, pf_hat_values, 'b-')
 plt.xlabel('function_calls')
@@ -173,4 +172,4 @@ plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
-plt.show()  """
+plt.show()  

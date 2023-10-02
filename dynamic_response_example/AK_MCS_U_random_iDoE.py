@@ -97,15 +97,14 @@ while True:
 
 
 # Plotting pf_hat values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'b-')
+plt.semilogy(function_calls_values, pf_hat_values, 'b-')
 plt.xlabel('function_calls')
 plt.ylabel('pf_hat')
 plt.title('Convergence Plot')
-
 
 # Display the number of iterations
 plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
          verticalalignment='top', horizontalalignment='right',
          transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
-plt.show() 
+plt.show()
