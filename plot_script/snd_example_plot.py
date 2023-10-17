@@ -3,14 +3,14 @@ import numpy as np
 
 # Define the performance function
 def performance_function(x1, x2):
-    return x2 - np.abs(np.tan(x1)) - 1
+    return -(x2 - np.abs(np.tan(x1)) - 1)
 
 # Generate a grid of points to evaluate the performance function
 x1 = np.linspace(-8, 16, 10000)  # Adjust the range as per your requirement
 x2 = np.linspace(-8, 16, 10000)  # Adjust the range as per your requirement
 
-u1 = np.random.normal(4, 2, size= 3000)
-u2 = np.random.normal(4, 2, size= 3000)
+u1 = np.random.normal(4, 2, size= 500)
+u2 = np.random.normal(8, 2, size= 500)
 
 performance_values = performance_function(u1, u2)
 
@@ -22,10 +22,10 @@ neg_count = np.sum(performance_values <0)
 pos_count = np.sum(performance_values > 0)
 
 # Plot the data points with negative performance function values in red
-plt.scatter(u1[negative_values_indices], u2[negative_values_indices], color='blue', label='Safe region g(u1,u2) < 0', s=2)
+plt.scatter(u1[negative_values_indices], u2[negative_values_indices], color='blue', label='Safe region g(u1,u2) > 0', s=2)
 
 # Plot the data points with non-negative performance function values in blue
-plt.scatter(u1[positive_values_indices], u2[positive_values_indices], color='red', label='Unsafe region g(u1,u2) > 0', s=2)
+plt.scatter(u1[positive_values_indices], u2[positive_values_indices], color='red', label='Unsafe region g(u1,u2) <= 0', s=2)
 
 X1, X2 = np.meshgrid(x1, x2)
 
@@ -37,16 +37,15 @@ plt.contour(X1, X2, Z, levels=0,  colors = 'black')
 
 print(pos_count)
 print(neg_count)
-print(neg_count / pos_count)
+print(pos_count / neg_count)
 # Set plot title and labels
-plt.title('Data points classified into safe and unsafe regions')
 plt.xlabel('u1')
 plt.ylabel('u2')
 
 plt.xlim(-4, 12)
-plt.ylim(-4, 12)
+plt.ylim(0, 12)
 plt.xticks(np.arange(-4, 13, 4))
-plt.yticks(np.arange(-4, 13, 4))
+plt.yticks(np.arange(0, 13, 4))
 plt.legend()
 
 # Show the plot
