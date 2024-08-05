@@ -108,6 +108,16 @@ for _ in range(25):
         pf_hat_values.append(Pf_hat)
         print("iter ", iter, ": ", Pf_hat)
     all_values.append(Pf_hat)
+if len(all_values) == 0:
+    print("The list is empty.")
+    mean = 0
+    variance = 0
+else:
+    mean = sum(all_values) / len(all_values)
+    variance = sum((x - mean) ** 2 for x in all_values) / len(all_values)
 
+print(f"List: {all_values}")
+print(f"Mean: {mean}")
+print(f"Variance: {variance}")
 
 
