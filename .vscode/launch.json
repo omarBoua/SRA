@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "new-mabda-fecth-data-HelloWorldFunction-uktVx6M95rAr:app.lambda_handler (python3.11)",
+            "invokeTarget": {
+                "target": "code",
+                "projectRoot": "${workspaceFolder}/new-mabda-fecth-data-HelloWorldFunction-uktVx6M95rAr",
+                "lambdaHandler": "app.lambda_handler"
+            },
+            "lambda": {
+                "runtime": "python3.11",
+                "payload": {},
+                "environmentVariables": {}
+            }
+        }
+    ]
+}

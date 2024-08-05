@@ -1,0 +1,168 @@
+adm1+name,adm1+pcode,adm2+pcode,adm2+name,affected+idps+hh,affected+idps+ind
+Aj Jazirah,SD15,Al Hasahisa,SD15034,12808,67139
+Aj Jazirah,SD15,Al Kamlin,SD15035,16070,80735
+Aj Jazirah,SD15,Al Manaqil,SD15036,6333,31576
+Aj Jazirah,SD15,Al Qurashi,SD15037,2313,11577
+Aj Jazirah,SD15,Janub Aj Jazirah,SD15031,6866,34427
+Aj Jazirah,SD15,Medani Al Kubra,SD15030,16470,84060
+Aj Jazirah,SD15,Sharg Aj Jazirah,SD15033,3115,15662
+Aj Jazirah,SD15,Um Algura,SD15032,8323,41947
+Blue Nile,SD08,Al Kurmuk,SD08106,52,260
+Blue Nile,SD08,Ar Rusayris,SD08107,3334,16670
+Blue Nile,SD08,At Tadamon - BN,SD08108,223,1114
+Blue Nile,SD08,Ed Damazine,SD08105,6706,33697
+Blue Nile,SD08,Geisan,SD08109,148,740
+Blue Nile,SD08,Wad Al Mahi,SD08110,192,960
+Central Darfur,SD06,Azum,SD06110,9800,49000
+Central Darfur,SD06,Gharb Jabal Marrah,SD06131,1200,6000
+Central Darfur,SD06,Shamal Jabal Marrah,SD06132,13557,67785
+Central Darfur,SD06,Um Dukhun,SD06135,7980,39900
+Central Darfur,SD06,Wadi Salih,SD06137,306,1530
+Central Darfur,SD06,Wasat Jabal Marrah,SD06139,1500,7500
+Central Darfur,SD06,Zalingi,SD06138,24115,120575
+East Darfur,SD05,Abu Jabrah,SD05140,8572,42860
+East Darfur,SD05,Abu Karinka,SD05155,6312,31560
+East Darfur,SD05,Ad Du'ayn,SD05142,21215,106075
+East Darfur,SD05,Adila,SD05139,9425,47125
+East Darfur,SD05,Al Firdous,SD05152,7150,35750
+East Darfur,SD05,Assalaya,SD05163,765,3825
+East Darfur,SD05,Bahr Al Arab,SD05160,10264,51420
+East Darfur,SD05,Shia'ria,SD05148,21843,109215
+East Darfur,SD05,Yassin,SD05165,14637,73185
+Gedaref,SD12,Al Butanah,SD12073,734,3670
+Gedaref,SD12,Al Fao,SD12074,2608,13359
+Gedaref,SD12,Al Fashaga,SD12075,2470,12618
+Gedaref,SD12,Al Galabat Al Gharbyah - Kassab,SD12078,2139,10695
+Gedaref,SD12,Al Mafaza,SD12082,3560,17800
+Gedaref,SD12,Al Qureisha,SD12076,3694,18470
+Gedaref,SD12,AR Rahad GR,SD12084,6400,32000
+Gedaref,SD12,Basundah,SD12077,2717,13605
+Gedaref,SD12,Gala'a Al Nahal,SD12079,2440,12202
+Gedaref,SD12,Galabat Ash-Shargiah,SD12083,7730,38650
+Gedaref,SD12,Madeinat Al Gedaref,SD12080,15022,75079
+Gedaref,SD12,Wasat Al Gedaref,SD12081,3645,18361
+Kassala,SD11,Halfa Aj Jadeedah,SD11052,8467,42335
+Kassala,SD11,Madeinat Kassala,SD11053,9459,47267
+Kassala,SD11,Reifi Aroma,SD11055,138,690
+Kassala,SD11,Reifi Kassla,SD11056,504,2545
+Kassala,SD11,Reifi Khashm Elgirba,SD11060,1613,8069
+Kassala,SD11,Reifi Nahr Atbara,SD11062,474,2391
+Kassala,SD11,Reifi Shamal Ad Delta,SD11057,384,1915
+Kassala,SD11,Reifi Telkok,SD11059,171,855
+Khartoum,SD01,Bahri,SD01003,1571,7855
+Khartoum,SD01,Jebel Awlia,SD01001,1892,9475
+Khartoum,SD01,Karrari,SD01005,1873,9365
+Khartoum,SD01,Khartoum,SD01007,1017,5085
+Khartoum,SD01,Sharg An Neel,SD01004,2597,13085
+Khartoum,SD01,Um Bada,SD01002,1005,5025
+Khartoum,SD01,Um Durman,SD01006,2537,12685
+North Darfur,SD02,Al Fasher,SD02114,20210,101603
+North Darfur,SD02,Al Koma,SD02116,383,1915
+North Darfur,SD02,Al lait,SD02169,1086,5530
+North Darfur,SD02,Al Malha,SD02117,798,3990
+North Darfur,SD02,As Serief,SD02118,440,2200
+North Darfur,SD02,At Tawisha,SD02119,70,350
+North Darfur,SD02,Dar As Salam,SD02113,2045,10225
+North Darfur,SD02,Kebkabiya,SD02124,2270,11350
+North Darfur,SD02,Kelemando,SD02126,1567,7835
+North Darfur,SD02,Kernoi,SD02168,120,600
+North Darfur,SD02,Kutum,SD02128,15308,76540
+North Darfur,SD02,Melit,SD02129,1450,7250
+North Darfur,SD02,Saraf Omra,SD02133,2533,12665
+North Darfur,SD02,Tawila,SD02170,18454,92270
+North Darfur,SD02,Um Baru,SD02120,103,515
+North Darfur,SD02,Um Kadadah,SD02136,150,750
+North Kordofan,SD13,Ar Rahad,SD13030,5602,28640
+North Kordofan,SD13,Bara,SD13026,2417,11318
+North Kordofan,SD13,Gebrat Al Sheikh,SD13027,1121,5258
+North Kordofan,SD13,Gharb Bara,SD13029,1196,6454
+North Kordofan,SD13,Sheikan,SD13024,3129,16601
+North Kordofan,SD13,Soudari,SD13025,388,2142
+North Kordofan,SD13,Um Dam Haj Ahmed,SD13028,1738,9039
+North Kordofan,SD13,Um Rawaba,SD13023,4077,21369
+Northern,SD17,Ad Dabbah,SD17019,13532,67780
+Northern,SD17,Al Burgaig,SD17016,7902,39514
+Northern,SD17,Al Golid,SD17018,8076,40380
+Northern,SD17,Delgo,SD17015,8952,44760
+Northern,SD17,Dongola,SD17017,10582,50041
+Northern,SD17,Halfa,SD17014,10541,52705
+Northern,SD17,Merwoe,SD17020,13656,67798
+Red Sea,SD10,Haya,SD10070,270,1350
+Red Sea,SD10,Jubayt Elma'aadin,SD10067,27,135
+Red Sea,SD10,Port Sudan,SD10064,22813,114204
+Red Sea,SD10,Sawakin,SD10068,140,700
+Red Sea,SD10,Sinkat,SD10071,808,4040
+Red Sea,SD10,Tawkar,SD10065,120,600
+River Nile,SD16,Abu Hamad,SD16008,12766,63451
+River Nile,SD16,Ad Damar,SD16011,26950,134600
+River Nile,SD16,Al Buhaira,SD16014,11214,56070
+River Nile,SD16,Al Matama,SD16009,17283,86337
+River Nile,SD16,Atbara,SD16012,17977,90528
+River Nile,SD16,Barbar,SD16013,1495,7476
+River Nile,SD16,Shendi,SD16010,27427,137629
+Sennar,SD14,Abu Hujar,SD14037,10272,51560
+Sennar,SD14,Ad Dali,SD14039,4821,24105
+Sennar,SD14,Ad Dinder,SD14040,11989,59916
+Sennar,SD14,As Suki,SD14041,9976,50114
+Sennar,SD14,Sennar,SD14038,10773,54068
+Sennar,SD14,Sharg Sennar,SD14042,9059,45295
+Sennar,SD14,Sinja,SD14043,7705,38678
+South Darfur,SD03,Al Wihda,SD03150,1465,7325
+South Darfur,SD03,As Salam - SD,SD03166,2120,10600
+South Darfur,SD03,As Sunta,SD03156,1060,5300
+South Darfur,SD03,Beliel,SD03162,23845,119233
+South Darfur,SD03,Buram,SD03161,3400,17000
+South Darfur,SD03,Damso,SD03172,550,2750
+South Darfur,SD03,Ed Al Fursan,SD03143,1462,7310
+South Darfur,SD03,Kas,SD03144,10108,50540
+South Darfur,SD03,Kateila,SD03159,730,3650
+South Darfur,SD03,Kubum,SD03157,1005,5025
+South Darfur,SD03,Mershing,SD03145,4610,23050
+South Darfur,SD03,Nitega,SD03151,1248,6240
+South Darfur,SD03,Nyala Janoub,SD03167,40715,203575
+South Darfur,SD03,Rehaid Albirdi,SD03158,800,4000
+South Darfur,SD03,Sharg Aj Jabal,SD03147,4694,23470
+South Darfur,SD03,Tulus,SD03149,3525,17625
+South Darfur,SD03,Um Dafoug,SD03146,545,2725
+South Kordofan,SD07,Abassiya,SD07090,2796,15169
+South Kordofan,SD07,Abu Jubayhah,SD07088,1667,8913
+South Kordofan,SD07,Abu Kershola,SD07104,1265,6779
+South Kordofan,SD07,Al Leri,SD07105,186,1230
+South Kordofan,SD07,Al Quoz,SD07094,362,1965
+South Kordofan,SD07,Ar Rashad,SD07093,1073,5028
+South Kordofan,SD07,Ar Reif Ash Shargi,SD07097,4322,21610
+South Kordofan,SD07,At Tadamon - SK,SD07106,200,1120
+South Kordofan,SD07,Delami,SD07107,284,1420
+South Kordofan,SD07,Dilling,SD07095,1924,8588
+South Kordofan,SD07,Ghadeer,SD07108,480,2460
+South Kordofan,SD07,Habila - SK,SD07103,1647,7924
+South Kordofan,SD07,Kadugli,SD07098,1639,8392
+South Kordofan,SD07,Talawdi,SD07089,402,2013
+West Darfur,SD04,Ag Geneina,SD04115,3299,16495
+West Darfur,SD04,Foro Baranga,SD04121,780,3900
+West Darfur,SD04,Jebel Moon,SD04123,7033,35165
+West Darfur,SD04,Kulbus,SD04127,5912,29560
+West Darfur,SD04,Sirba,SD04134,5175,25875
+West Kordofan,SD18,Abu Zabad,SD18028,1606,8173
+West Kordofan,SD18,Abyei,SD18087,570,3053
+West Kordofan,SD18,Al Dibab,SD18103,859,4314
+West Kordofan,SD18,Al Idia,SD18104,633,3783
+West Kordofan,SD18,Al Khiwai,SD18105,636,3138
+West Kordofan,SD18,Al Lagowa,SD18102,263,1656
+West Kordofan,SD18,Al Meiram,SD18106,227,1087
+West Kordofan,SD18,An Nuhud,SD18022,1320,7456
+West Kordofan,SD18,As Salam - WK,SD18086,1257,5621
+West Kordofan,SD18,As Sunut,SD18092,278,1286
+West Kordofan,SD18,Babanusa,SD18100,712,3529
+West Kordofan,SD18,Ghubaish,SD18021,1106,5181
+West Kordofan,SD18,Keilak,SD18085,207,1208
+West Kordofan,SD18,Wad Bandah,SD18029,828,4453
+White Nile,SD09,Ad Diwaim,SD09044,12727,62992
+White Nile,SD09,Aj Jabalain,SD09051,14548,72741
+White Nile,SD09,Al Gitaina,SD09050,5897,29510
+White Nile,SD09,As Salam / Ar Rawat,SD09049,9043,45224
+White Nile,SD09,Guli,SD09052,5220,28688
+White Nile,SD09,Kosti,SD09047,3616,18089
+White Nile,SD09,Rabak,SD09046,4499,22086
+White Nile,SD09,Tendalti,SD09048,3478,17528
+White Nile,SD09,Um Rimta,SD09045,3739,18712

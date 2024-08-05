@@ -59,10 +59,10 @@ n_splits = 5
 
 models = []
 for _ in range(n_splits):
-    model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
+    model = MLPRegressor(hidden_layer_sizes=(20,20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
     models.append(model)
 
-base_model = MLPRegressor(hidden_layer_sizes=(20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
+base_model = MLPRegressor(hidden_layer_sizes=(20,20), max_iter = 100000, activation='tanh', solver='lbfgs',early_stopping=True)
 iter = 0
 kf = KFold(n_splits=n_splits  )
 

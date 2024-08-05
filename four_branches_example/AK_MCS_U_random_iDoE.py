@@ -1,8 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
-import matplotlib.pyplot as plt
-from scipy.spatial.distance import cdist
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -109,58 +108,3 @@ while True:
     print("iter ",iter, ": ",Pf_hat)
 
 
-
-x1_vals = np.linspace(-6, 6, 1000)
-x2_vals = np.linspace(-6, 6, 1000)
-X1, X2 = np.meshgrid(x1_vals, x2_vals)
-
-# Calculate LSF values for each combination of x1 and x2
-Z = np.array([performance_function(x1, x2) for x1, x2 in zip(X1.flatten(), X2.flatten())])
-Z = Z.reshape(X1.shape)
-
-# Plotting the contour of LSF
-plt.contour(X1, X2, Z, levels=[0], colors='black')
-plt.xlabel('x1')
-plt.ylabel('x2')
-
-# Plotting the initial points in the design of experiment
-plt.scatter(DoE[:, 0], DoE[:, 1], c='blue', s=5, label='Initial Points', marker = 'o')
-
-# Plotting the added points in the final design of experiment
-plt.scatter(DoE[n_EDini:, 0], DoE[n_EDini:, 1], c='red',s=5, label='Added Points', marker = 'o')
-
-
-legend_elements = [
-    plt.Line2D([0], [0], color='black', linewidth=1, label='G = 0'),
-    plt.Line2D([0], [0], color='blue', marker='o', linestyle='None', markersize=5, label='Initial Points'),
-    plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Added Points')
-]
-
-
-plt.legend(handles=legend_elements)
-
-plt.show() 
-
-""" 
-# Plotting pf_hat values vs. function_calls
-plt.plot(function_calls_values, pf_hat_values, 'b-')
-plt.xlabel('function_calls')
-plt.ylabel('pf_hat')
-plt.title('Convergence Plot')
-
-
-# Indicate the last point
-last_point_calls = function_calls_values[-1]
-last_point_pf_hat = pf_hat_values[-1]
-plt.plot(last_point_calls, last_point_pf_hat, 'ro')
-plt.annotate(f'({last_point_calls}, {last_point_pf_hat})',
-             xy=(last_point_calls, last_point_pf_hat),
-             xytext=(last_point_calls  , last_point_pf_hat+last_point_pf_hat/10 ),
-             arrowprops=dict(facecolor='black', arrowstyle='->'))
-
-# Display the number of iterations
-plt.text(0.95, 0.95, f'Iterations until convergence: {iter}',
-         verticalalignment='top', horizontalalignment='right',
-         transform=plt.gca().transAxes, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-
-plt.show()  """
