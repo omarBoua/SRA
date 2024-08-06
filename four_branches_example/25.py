@@ -1,8 +1,9 @@
-import numpy as np
+
 import math
+
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
-import matplotlib.pyplot as plt
 import warnings
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
