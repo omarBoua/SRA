@@ -1,7 +1,0 @@
-List: [0.004446]
-Mean: 0.004446
-Variance: 0.0
-Coefficient of Variation: 0.0
-RMSE with respect to P_F: 3.9999999999996635e-06
-Standardized RMSE: 0.0008988764044943064
-Mean function calls: 69.0
