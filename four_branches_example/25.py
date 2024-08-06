@@ -46,7 +46,7 @@ def min_distances_from_doe_vectorized(S, D):
 
 all_values = []
 all_f = []
-for _ in range(1):
+for _ in range(25):
     alpha = 0.75
     nMC = 500000
     x1 = np.random.normal(0, 1, size=nMC)
