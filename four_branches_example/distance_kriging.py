@@ -1,5 +1,5 @@
 import numpy as np
-from docutils.nodes import math
+import math
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
