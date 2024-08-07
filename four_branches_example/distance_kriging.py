@@ -124,7 +124,7 @@ for _ in range(25):
 
         delta_pf = np.max(np.abs(pf_base_model - pf_values))
         stopping_criterion = delta_pf / pf_base_model
-        conv_threshold = 0.01
+        conv_threshold = 0.05
         if(stopping_criterion <= conv_threshold):
             print("here")
             cov_pf = np.sqrt(1 - pf_base_model) / (np.sqrt(pf_base_model* nMC) )
