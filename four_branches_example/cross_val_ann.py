@@ -25,7 +25,7 @@ for _ in range(25):
 
     function_calls = 0
 
-    nMC = 500000
+    nMC = 1000000
     x1 = np.random.normal(0, 1, size=nMC)
     x2 = np.random.normal(0, 1, size=nMC)
     S = np.column_stack((x1, x2))
