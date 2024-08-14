@@ -152,7 +152,7 @@ else:
     mean = sum(all_values) / len(all_values)
     variance = sum((x - mean) ** 2 for x in all_values) / len(all_values)
 mean_f = sum(all_f)/len(all_f)
-log_file_path = "statistics_ann_eff.txt"
+log_file_path = "statistics_ann_distance.txt"
 # P_F value
 P_F = 4.45e-3
 
