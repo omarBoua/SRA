@@ -1,128 +1,176 @@
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.gaussian_process import GaussianProcessRegressor
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
-from scipy.stats import norm
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import StandardScaler
+import warnings
+import math
+from sklearn.model_selection import KFold
 
-def eff(g_hat_values, sigma_g_values):
-    a = 0
-    epsilon = 2 * np.square(sigma_g_values)
+warnings.filterwarnings("ignore")
 
-    term1 = (g_hat_values - a) * (2 * norm.cdf((a - g_hat_values) / sigma_g_values) - norm.cdf((a - epsilon - g_hat_values) / sigma_g_values) - norm.cdf((a + epsilon - g_hat_values) / sigma_g_values))
-    term2 = -sigma_g_values * (2 * norm.pdf((a - g_hat_values) / sigma_g_values) - norm.pdf((a - epsilon - g_hat_values) / sigma_g_values) - norm.pdf((a + epsilon - g_hat_values) / sigma_g_values))
-    term3 = norm.cdf((a + epsilon - g_hat_values) / sigma_g_values) - norm.cdf((a - epsilon - g_hat_values) / sigma_g_values)
 
-    eff_values = term1 + term2 + term3
-    return eff_values
+# Performance function with two inputs six input parameters. Set k to 1.5 for lower probability
 def performance_function(x1, x2):
     k = 6
-    term1 = 3 + 0.1 * (x1 - x2)**2 - (x1 + x2)/(np.sqrt(2))
-    term2 = 3 + 0.1 * (x1 - x2)**2 + (x1 + x2)/(np.sqrt(2))
-    term3 = (x1 - x2) + k / (2**0.5)
-    term4 = (x2 - x1) + k / (2**0.5)
-    
+    term1 = 3 + 0.1 * (x1 - x2) ** 2 - (x1 + x2) / (np.sqrt(2))
+    term2 = 3 + 0.1 * (x1 - x2) ** 2 + (x1 + x2) / (np.sqrt(2))
+    term3 = (x1 - x2) + k / (2 ** 0.5)
+    term4 = (x2 - x1) + k / (2 ** 0.5)
+    global function_calls
+    function_calls += 1
     return min(term1, term2, term3, term4)
-# Stage 1: Generation of Monte Carlo population
-output = []
-f_calls = []
-for _ in range(10):
 
-    nMC = 1000000
-    x1 = np.random.normal(0,1,size = nMC)
-    x2 = np.random.normal(0,1,size = nMC )
-    S = np.column_stack((x1, x2))
+
+
+
+
+def min_distances_from_doe_vectorized(S, D):
+    # Convert S and D into numpy arrays
+    S_np = np.array(S)
+    D_np = np.array(D)
+
+    # Expand dimensions to broadcast the subtraction operation
+    diffs = S_np[:, np.newaxis] - D_np
+
+    # Calculate squared distances
+    squared_distances = np.sum(diffs ** 2, axis=-1)
+
+    # Find the minimal squared distance along the last dimension
+    min_squared_distances = np.min(squared_distances, axis=-1)
+
+    # Return the square root to get the Euclidean distances
+    return np.sqrt(min_squared_distances)
+all_values = []
+all_f = []
+for _ in range(25):
     function_calls = 0
+    nMC = 1000000
+    x1 = np.random.normal(0, 1, size=nMC)
+    x2 = np.random.normal(0, 1, size=nMC)
+    S = np.column_stack((x1, x2))
 
+    # 2. create the initial design of experimental
+    n_EDini = 12
+    selected_indices = np.random.choice(len(S), n_EDini, replace=False)
 
+    DoE = np.array(S[selected_indices])
 
+    initial_design = np.array(DoE)
+    labels = np.zeros(n_EDini)
+    for i in range(n_EDini):
+        labels[i] = performance_function(initial_design[i, 0],
+                                         initial_design[i, 1])  # Evaluate performance function
+        labels[i] = np.tanh(labels[i])  # smoothing the labels
 
-
-    # Stage 2: Definition of initial design of experiments (DoE)
-    N1 = 12
-    #uncomment for random selection
-    n_EDini = N1 
-    selected_indices = np.random.choice(len(S), N1, replace=False)
-
-    DoE = S[selected_indices]
-
-    """ #uncomment for importance sampling
-    mean_population = np.mean(S, axis=0)
-    distances_to_mean = cdist([mean_population], S)
-    closest_sample_index = np.argmin(distances_to_mean)
-    initial_design = [S[closest_sample_index]]
-
-    for _ in range(N1 - 1):
-        distances_to_design = cdist(initial_design, S)
-        farthest_sample_index = np.argmax(np.min(distances_to_design, axis=0))
-        initial_design.append(S[farthest_sample_index])
-
-    DoE = np.array(initial_design)
-    """
-    Pf_values = np.zeros(N1)  # Array to store performance function evaluations
-    for i in range(N1):
-        Pf_values[i] = performance_function(DoE[i, 0], DoE[i, 1])  # Evaluate performance function
-        function_calls += 1
-
-
-    # Stage 3: Computation of Kriging model
     scaler = StandardScaler()
+    DoE = initial_design
     scaled_DoE = scaler.fit_transform(DoE)
-    #kernel = ConstantKernel(1.0) * RBF(1.0)
-    kriging = GaussianProcessRegressor()
-    kriging.fit(scaled_DoE, Pf_values)
-    iter =0
-    function_calls_values = []
-    pf_hat_values = []
-    while True:
-        # Stage 4: Prediction by Kriging and estimation of probability of failure
-        nMC = len(S)
-        G_hat, kriging_std = kriging.predict(scaler.transform(S),return_std=True)
-        Pf_hat = np.sum(G_hat < 0) / nMC
-        
-        # Stage 5: Identification of the best next point to evaluate
-        learning_values = eff(G_hat, kriging_std)
-        x_best_index = np.argmax(learning_values)
-        x_best = S[x_best_index]
-        # Stage 6: Stopping condition on learning
-        stopping_condition = max(learning_values) <= 0.001   
 
-        # Stage 7: Update of the previous design of experiments with the best point
-        if stopping_condition:
-            # Stopping condition met, learning is stopped
-            cov_pf = np.sqrt(1 - Pf_hat) / (np.sqrt(Pf_hat* nMC) )
-            
-            cov_threshold = 0.05
-            if cov_pf <= cov_threshold:
+    # Create a k-fold cross validator
+    n_splits = 5
+
+    scaled_S = scaler.fit_transform(S)
+
+    models = []
+    for _ in range(n_splits):
+        model = MLPRegressor(hidden_layer_sizes=(40), max_iter=100000, activation='tanh', solver='lbfgs',
+                             early_stopping=True)
+        models.append(model)
+
+    base_model = MLPRegressor(hidden_layer_sizes=(40), max_iter=100000, activation='tanh', solver='lbfgs',
+                              early_stopping=True)
+    iter = 0
+    kf = KFold(n_splits=n_splits)
+
+    i = 0
+    while True:
+
+        predictions = [[] for _ in range(n_splits)]
+        pf_values = []
+
+        base_model.fit(scaled_DoE, labels)
+        prediction_base_model = base_model.predict(scaled_S)
+        pf_base_model = np.sum(prediction_base_model <= 0) / nMC
+        # Loop through each fold
+        for i, (train_index, test_index) in enumerate(kf.split(scaled_DoE)):
+            X_train, X_test = scaled_DoE[train_index], scaled_DoE[test_index]
+
+            y_train, y_test = labels[train_index], labels[test_index]
+
+            # The ith model will be trained on training set where the ith fold is not used for training
+
+            models[i].fit(X_train, y_train)
+            predictions[i] = models[i].predict(scaled_S)
+            pf = np.sum(predictions[i] <= 0) / nMC
+            pf_values.append(pf)
+
+        print(pf_values)
+        d_min = min_distances_from_doe_vectorized(S, DoE)
+        learning_values = np.abs(prediction_base_model) / d_min
+
+        best_point_index = np.argmin(learning_values)
+        x_best_point = S[best_point_index]
+
+        label_best_point = np.tanh(performance_function(x_best_point[0], x_best_point[1]))
+        labels = np.concatenate((labels, [label_best_point]))
+        DoE = np.vstack((DoE, x_best_point))
+        scaled_DoE = scaler.transform(DoE)
+
+        delta_pf = np.max(np.abs(pf_base_model - pf_values))
+        stopping_criterion = delta_pf / pf_base_model
+        conv_threshold = 0.02
+        if (stopping_criterion <= conv_threshold):
+            cov_pf = np.sqrt(1 - pf_base_model) / (np.sqrt(pf_base_model * nMC))
+            if (cov_pf <= conv_threshold):
                 # Coefficient of variation is acceptable, stop AK-MCS
-                print("AK-MCS finished. Probability of failure: {:.4e}".format(Pf_hat))
-                print("Coefficient of variation: {:.4%}".format(cov_pf))
+                print("New ANN finished. Probability of failure: {:.2e}".format(pf_base_model))
+                print("Coefficient of variation: {:.2%}".format(cov_pf))
                 print("Number of calls to the performance function", function_calls)
-                
-                output.append(Pf_hat)
-                f_calls.append(function_calls)
+                all_values.append(pf_base_model)
+                all_f.append(function_calls)
                 break
-                # Stage 10: End of AK-MCS
             else:
-                # Coefficient of variation is too high, update population
-                new_x = np.random.normal(0,1, nMC)
-                new_y = np.random.normal(0,1,nMC)
-                new_points = np.column_stack((new_x, new_y)) 
+                new_x1 = np.random.normal(0, 1, size=nMC)
+                new_x2 = np.random.normal(0, 1, size=nMC)
+                new_points = np.column_stack((new_x1, new_x2))
+
                 S = np.vstack((S, new_points))
-                # Go back to Stage 4
+                scaled_S = scaler.transform(S)
+                nMC = len(S)
+
+
         else:
-            # Stopping condition not met, update design of experiments
-            x_best_performance = performance_function(x_best[0], x_best[1])
-            function_calls += 1
-            Pf_values = np.concatenate((Pf_values, [x_best_performance]))
-            DoE = np.vstack((DoE, x_best))
-            scaled_DoE = scaler.transform(DoE)
-            kriging.fit(scaled_DoE, Pf_values)
-            # Go back to Stage 4
-        iter += 1
-        function_calls_values.append(function_calls)
-        pf_hat_values.append(Pf_hat)
-        print("iter ",iter, ": ",Pf_hat)
-print(np.mean(output))
-print(np.mean(f_calls))
-print(np.std(output) / np.mean(output))
+            print("pf", pf_base_model)
+            print("stop", stopping_criterion)
+            iter += 1
+
+if len(all_values) == 0:
+    print("The list is empty.")
+    mean = 0
+    variance = 0
+else:
+    mean = sum(all_values) / len(all_values)
+    variance = sum((x - mean) ** 2 for x in all_values) / len(all_values)
+mean_f = sum(all_f)/len(all_f)
+log_file_path = "statistics_ann_eff.txt"
+# P_F value
+P_F = 4.45e-3
+
+# Calculate the RMSE
+rmse = math.sqrt(sum((x - P_F) ** 2 for x in all_values) / len(all_values))
+std_dev = math.sqrt(variance)
+
+# Calculate the coefficient of variation
+coef_of_variation = std_dev / mean
+standardized_rmse = rmse / P_F
+
+
+# Write logs to the file
+with open(log_file_path, 'w') as log_file:
+    log_file.write(f"List: {all_values}\n")
+    log_file.write(f"Mean: {mean}\n")
+    log_file.write(f"Variance: {variance}\n")
+    log_file.write(f"Coefficient of Variation: {coef_of_variation}\n")
+    log_file.write(f"RMSE with respect to P_F: {rmse}\n")
+    log_file.write(f"Standardized RMSE: {standardized_rmse}\n")
+    log_file.write(f"Mean function calls: {mean_f}\n")
